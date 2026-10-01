@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% block title %}Driver Cockpit — LogiCraft{% endblock %}
+
+{% block extra_css %}
+<style>
+    .driver-hud-card {
+        background: linear-gradient(135deg, #0b1320 0%, #1e293b 100%);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 18px;
+        color: #ffffff;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    .hud-stat-box {
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 0.9rem;
+    }
+    .trip-card {
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+        transition: transform 0.2s ease;
+    }
+    .trip-card:hover {
+        transform: translateY(-2px);
+    }
+    .pulse-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        background: #10b981;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.25);
+    }
+    .pulse-busy {
+        background: #f59e0b;
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <!-- Top Welcome & Duty Status Bar -->
+    <div class="row align-items-center mb-4 g-3">
+        <div class="col-md-7">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 52px; height: 52px; font-size: 1.6rem;">
+                    <i class="bi bi-steering-wheel"></i>
+                </div>
+                <div>
+                    <h3 class="mb-0 fw-bold">Driver Cockpit: {{ user.get_full_name|default:user.username }}</h3>
+                    <div class="text-muted small mt-1 d-flex align-items-center gap-2 flex-wrap">
+                        <span><i class="bi bi-card-heading me-1"></i>Lic: <strong>{{ driver.license_number|default:"DL-142011" }}</strong></span>
+                        <span>•</span>
+                        <span><i class="bi bi-clock-history me-1"></i>Exp: <strong>{{ driver.years_of_experience|default:1 }} yrs</strong></span>
+                        <span>•</span>
+                        <span><i class="bi bi-calendar2-check me-1"></i>Valid till: <strong>{{ driver.license_expiry|date:"M Y"|default:"2028" }}</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5 text-md-end">
+            <!-- Duty Status Dropdown Toggle -->
+            <form method="post" action="{% url 'fleet:driver_toggle_duty' %}" class="d-inline-flex align-items-center gap-2">
+                {% csrf_token %}
+                <span class="text-muted small fw-semibold">Duty Mode:</span>
+                <select name="duty_status" class="form-select form-select-sm shadow-sm" style="width: 175px;" onchange="this.form.submit()">
+                    <option value="ON_DUTY" {% if driver.status == 'ON_DUTY' %}selected{% endif %}>🟢 On Duty (Available)</option>
+                    <option value="ON_TRIP" {% if driver.status == 'ON_TRIP' %}selected{% endif %}>🟠 On Trip (En Route)</option>
+                    <option value="OFF_DUTY" {% if driver.status == 'OFF_DUTY' %}selected{% endif %}>⚪ Off Duty</option>
+                    <option value="ON_LEAVE" {% if driver.status == 'ON_LEAVE' %}selected{% endif %}>🔴 On Leave</option>
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <!-- Assigned Vehicle Telemetry HUD -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="driver-hud-card p-4">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                    <div>
+                        <div class="text-white-50 text-uppercase small fw-bold tracking-wider mb-1">Assigned Fleet Vehicle</div>
+                        <h4 class="fw-bold mb-0 text-white">
+                            <i class="bi bi-truck me-2 text-danger"></i>{{ vehicle.reg_number|default:"No Vehicle Assigned" }}
+                            <small class="fs-6 text-white-50 fw-normal ms-2">{{ vehicle.model_name|default:"" }}</small>
+                        </h4>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-warning text-white" data-bs-toggle="modal" data-bs-target="#reportIssueModal">
+                            <i class="bi bi-exclamation-octagon me-1"></i>Report Vehicle Issue
+                        </button>
+                        <a href="tel:{{ driver.emergency_contact|default:'+919811002233' }}" class="btn btn-sm btn-danger">
+                            <i class="bi bi-telephone-fill me-1"></i>Dispatch SOS
+                        </a>
+                    </div>
+                </div>
+
+                {% if vehicle %}
+                <div class="row g-3 mt-1">
+                    <div class="col-6 col-md-3">
+                        <div class="hud-stat-box">
+                            <div class="text-white-50 small"><i class="bi bi-speedometer2 me-1"></i>Odometer</div>
+                            <div class="fs-5 fw-bold text-white">{{ vehicle.odometer_km|floatformat:0 }} km</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="hud-stat-box">
+                            <div class="text-white-50 small"><i class="bi bi-fuel-pump me-1"></i>Fuel & Category</div>
+                            <div class="fs-5 fw-bold text-white">{{ vehicle.get_fuel_type_display }} &bull; {{ vehicle.get_vehicle_type_display }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="hud-stat-box">
+                            <div class="text-white-50 small"><i class="bi bi-box-seam me-1"></i>Payload Limit</div>
+                            <div class="fs-5 fw-bold text-white">{{ vehicle.capacity_kg|floatformat:0 }} kg</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="hud-stat-box">
+                            <div class="text-white-50 small"><i class="bi bi-geo-alt-fill text-warning me-1"></i>Current Waypoint</div>
+                            <div class="fs-5 fw-bold text-white text-truncate">{{ vehicle.current_location|default:"Terminal 1" }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Shipments & Trip Actions -->
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-pin-map-fill text-danger me-2"></i>Active Assigned Trips ({{ active_shipments|length }})</h5>
+                    <span class="badge bg-primary rounded-pill">{{ active_shipments|length }} In-Flight</span>
+                </div>
+                <div class="card-body p-3">
+                    {% if active_shipments %}
+                        {% for s in active_shipments %}
+                        <div class="trip-card p-3 mb-3 bg-white">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 border-bottom pb-2 mb-3">
+                                <div>
+                                    <span class="badge bg-dark font-monospace fs-6">{{ s.tracking_number }}</span>
+                                    <span class="badge {% if s.current_status == 'IN_TRANSIT' %}bg-primary{% elif s.current_status == 'PICKED_UP' %}bg-info text-dark{% elif s.current_status == 'OUT_FOR_DELIVERY' %}bg-warning text-dark{% else %}bg-secondary{% endif %} ms-2">
+                                        {{ s.get_current_status_display }}
+                                    </span>
+                                </div>
+                                <div class="text-muted small">
+                                    Est. Delivery: <strong>{{ s.estimated_delivery|date:"d M Y"|default:"TBD" }}</strong>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="text-primary fs-4"><i class="bi bi-arrow-up-circle-fill"></i></div>
+                                        <div>
+                                            <div class="text-muted small">Origin Hub / Shipper</div>
+                                            <strong class="text-dark">{{ s.origin_warehouse.name|default:s.sender_name }}</strong>
+                                            <div class="text-muted small">{{ s.sender_address|truncatechars:45 }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="text-success fs-4"><i class="bi bi-geo-alt-fill"></i></div>
+                                        <div>
+                                            <div class="text-muted small">Destination Hub / Receiver</div>
+                                            <strong class="text-dark">{{ s.destination_warehouse.name|default:s.receiver_name }}</strong>
+                                            <div class="text-muted small">{{ s.receiver_address|truncatechars:45 }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-2 rounded bg-light mb-3 d-flex justify-content-between flex-wrap text-muted small">
+                                <span><i class="bi bi-box me-1"></i>Cargo: <strong>{{ s.description }}</strong></span>
+                                <span><i class="bi bi-speedometer me-1"></i>Weight: <strong>{{ s.weight_kg }} kg</strong></span>
+                                <span><i class="bi bi-telephone me-1"></i>Receiver Contact: <a href="tel:{{ s.receiver_phone }}">{{ s.receiver_phone }}</a></span>
+                            </div>
+
+                            <!-- Single-Tap Driver Status Update Form -->
+                            <form method="post" action="{% url 'fleet:driver_update_shipment' s.pk %}" class="bg-light-subtle p-3 rounded border">
+                                {% csrf_token %}
+                                <div class="fw-semibold small mb-2 text-dark"><i class="bi bi-check2-circle text-primary me-1"></i>Log Milestone & Update Trip Status:</div>
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted mb-1">New Status</label>
+                                        <select name="status" class="form-select form-select-sm" required>
+                                            <option value="PICKED_UP" {% if s.current_status == 'PICKED_UP' %}selected{% endif %}>📦 Picked Up from Shipper</option>
+                                            <option value="AT_HUB" {% if s.current_status == 'AT_HUB' %}selected{% endif %}>🏢 Arrived at Hub</option>
+                                            <option value="IN_TRANSIT" {% if s.current_status == 'IN_TRANSIT' %}selected{% endif %}>🚛 In Transit on Highway</option>
+                                            <option value="OUT_FOR_DELIVERY" {% if s.current_status == 'OUT_FOR_DELIVERY' %}selected{% endif %}>⚡ Out for Final Delivery</option>
+                                            <option value="DELIVERED">✅ Completed & Delivered</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label small text-muted mb-1">Current Checkpoint / Location</label>
+                                        <input type="text" name="location_checkpoint" class="form-control form-select-sm" placeholder="e.g. NH 48 Toll Plaza / Sector 18 Hub" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="submit" class="btn btn-sm btn-primary w-100 fw-bold">
+                                            <i class="bi bi-arrow-repeat me-1"></i>Update Trip
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-check2-circle fs-1 text-success"></i>
+                            <h5 class="mt-3">No Active Trips Assigned</h5>
+                            <p class="small">You are currently on standby. The logistics manager will assign trips when cargo is scheduled.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar: Completed Trips & Safety Guidelines -->
+        <div class="col-lg-4">
+            <!-- Completed Trips History -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-secondary"></i>Recent Delivered Trips</h6>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for s in completed_shipments %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                            <div>
+                                <span class="font-monospace small fw-bold">{{ s.tracking_number }}</span>
+                                <div class="text-muted small">{{ s.destination_warehouse.city|default:s.receiver_name }}</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">Delivered</span>
+                                <div class="text-muted small" style="font-size: 0.72rem;">{{ s.delivered_at|date:"d M H:i" }}</div>
+                            </div>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-center text-muted py-4 small">No past trips recorded yet.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Driver Safety Card -->
+            <div class="card shadow-sm border-0 bg-light">
+                <div class="card-body p-3">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-shield-check text-success me-2"></i>Trip Safety Checklist</h6>
+                    <ul class="text-muted small ps-3 mb-0" style="line-height: 1.7;">
+                        <li>Verify container seals and lock pins before departure.</li>
+                        <li>Update waypoint checkpoint at every highway state border.</li>
+                        <li>Maintain mandatory rest stop every 4 hours of heavy driving.</li>
+                        <li>In case of breakdown, tap <strong>Report Vehicle Issue</strong> immediately.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Report Vehicle Issue -->
+<div class="modal fade" id="reportIssueModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning-subtle">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-tools me-2"></i>Report Vehicle Incident / Breakdown</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'fleet:driver_report_issue' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Vehicle</label>
+                        <input type="text" class="form-control" value="{{ vehicle.reg_number }} ({{ vehicle.model_name }})" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Incident Type</label>
+                        <select name="service_type" class="form-select" required>
+                            <option value="EMERGENCY">🚨 Roadside Breakdown / Stopped</option>
+                            <option value="TIRES">🛞 Flat Tire / Wheel Pressure Issue</option>
+                            <option value="BRAKES">🛑 Brake Warning / Wear</option>
+                            <option value="ENGINE">⚙️ Engine Temperature / Warning Light</option>
+                            <option value="ROUTINE">🔧 Routine Maintenance Needed</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Description of Problem</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Describe the issue, highway location, or symptoms..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Current Odometer (km)</label>
+                        <input type="number" name="odometer" class="form-control" value="{{ vehicle.odometer_km|floatformat:0 }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning fw-bold"><i class="bi bi-send-fill me-1"></i>Submit Incident Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

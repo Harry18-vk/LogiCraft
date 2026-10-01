@@ -1,11 +1,14 @@
 import json
 import csv
+from datetime import date
+from django.utils import timezone
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Vehicle, Driver, MaintenanceRecord
 from warehouse.models import Warehouse
+from shipments.models import Shipment, ShipmentStatusHistory
 
 
 @login_required
@@ -208,3 +211,135 @@ def export_fleet_csv(request):
         ])
 
     return response
+
+
+@login_required
+def driver_portal(request):
+    driver = getattr(request.user, 'driver_profile', None)
+    if not driver and not request.user.is_superuser:
+        messages.error(request, "Access restricted to fleet drivers.")
+        return redirect('dashboard:home')
+
+    # If superuser testing without driver profile, view first driver
+    if not driver and request.user.is_superuser:
+        driver = Driver.objects.first()
+
+    assigned_vehicle = driver.assigned_vehicle if driver else None
+
+    active_shipments = []
+    completed_shipments = []
+    if driver:
+        active_shipments = Shipment.objects.filter(
+            assigned_driver=driver
+        ).exclude(
+            current_status=Shipment.Status.DELIVERED
+        ).select_related('origin_warehouse', 'destination_warehouse', 'assigned_vehicle').order_by('-created_at')
+
+        completed_shipments = Shipment.objects.filter(
+            assigned_driver=driver,
+            current_status=Shipment.Status.DELIVERED
+        ).select_related('origin_warehouse', 'destination_warehouse').order_by('-delivered_at')[:5]
+
+    return render(request, 'fleet/driver_portal.html', {
+        'driver': driver,
+        'vehicle': assigned_vehicle,
+        'active_shipments': active_shipments,
+        'completed_shipments': completed_shipments,
+        'status_choices': Shipment.Status.choices,
+    })
+
+
+@login_required
+def driver_update_shipment(request, pk):
+    driver = getattr(request.user, 'driver_profile', None)
+    if not driver and not request.user.is_superuser:
+        messages.error(request, "Unauthorized action.")
+        return redirect('fleet:driver_portal')
+
+    shipment = get_object_or_404(Shipment, pk=pk)
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        checkpoint = request.POST.get('location_checkpoint', '').strip()
+        notes = request.POST.get('notes', '').strip()
+
+        if new_status:
+            shipment.current_status = new_status
+            if new_status == Shipment.Status.DELIVERED:
+                shipment.delivered_at = timezone.now()
+                if driver:
+                    driver.status = Driver.Status.ON_DUTY
+                    driver.save()
+                if shipment.assigned_vehicle:
+                    shipment.assigned_vehicle.status = Vehicle.Status.AVAILABLE
+                    shipment.assigned_vehicle.save()
+            elif new_status == Shipment.Status.IN_TRANSIT:
+                if driver:
+                    driver.status = Driver.Status.ON_TRIP
+                    driver.save()
+                if shipment.assigned_vehicle:
+                    shipment.assigned_vehicle.status = Vehicle.Status.ON_TRIP
+                    shipment.assigned_vehicle.save()
+
+            shipment.save()
+
+            if checkpoint and shipment.assigned_vehicle:
+                shipment.assigned_vehicle.current_location = checkpoint
+                shipment.assigned_vehicle.save()
+
+            ShipmentStatusHistory.objects.create(
+                shipment=shipment,
+                status=new_status,
+                location_checkpoint=checkpoint or (shipment.assigned_vehicle.current_location if shipment.assigned_vehicle else "En Route"),
+                notes=notes or f"Status logged by driver {request.user.get_full_name() or request.user.username}",
+                updated_by=request.user
+            )
+            messages.success(request, f"Shipment {shipment.tracking_number} status updated to {shipment.get_current_status_display()}!")
+
+    return redirect('fleet:driver_portal')
+
+
+@login_required
+def driver_toggle_duty(request):
+    driver = getattr(request.user, 'driver_profile', None)
+    if not driver:
+        messages.error(request, "Driver profile not found.")
+        return redirect('fleet:driver_portal')
+
+    if request.method == 'POST':
+        new_status = request.POST.get('duty_status')
+        if new_status in [Driver.Status.ON_DUTY, Driver.Status.OFF_DUTY, Driver.Status.ON_LEAVE]:
+            driver.status = new_status
+            driver.save()
+            messages.success(request, f"Duty status updated to {driver.get_status_display()}.")
+
+    return redirect('fleet:driver_portal')
+
+
+@login_required
+def driver_report_issue(request):
+    driver = getattr(request.user, 'driver_profile', None)
+    if not driver or not driver.assigned_vehicle:
+        messages.error(request, "No vehicle assigned to report issue for.")
+        return redirect('fleet:driver_portal')
+
+    if request.method == 'POST':
+        service_type = request.POST.get('service_type', MaintenanceRecord.ServiceType.EMERGENCY)
+        description = request.POST.get('description', '').strip()
+        odometer = request.POST.get('odometer', driver.assigned_vehicle.odometer_km)
+
+        if description:
+            MaintenanceRecord.objects.create(
+                vehicle=driver.assigned_vehicle,
+                service_type=service_type,
+                description=f"[Reported by Driver {request.user.username}]: {description}",
+                service_date=date.today(),
+                odometer_at_service=odometer or driver.assigned_vehicle.odometer_km,
+                status=MaintenanceRecord.Status.SCHEDULED,
+                notes="Driver flagged incident from driver portal."
+            )
+            driver.assigned_vehicle.status = Vehicle.Status.IN_MAINTENANCE
+            driver.assigned_vehicle.save()
+            messages.warning(request, f"Incident reported for {driver.assigned_vehicle.reg_number}. Maintenance scheduled!")
+
+    return redirect('fleet:driver_portal')
+

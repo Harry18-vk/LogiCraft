@@ -8,6 +8,8 @@ from .models import CustomUser
 
 def user_login(request):
     if request.user.is_authenticated:
+        if request.user.is_driver:
+            return redirect('fleet:driver_portal')
         return redirect('dashboard:home')
 
     if request.method == 'POST':
@@ -16,6 +18,8 @@ def user_login(request):
             user = form.get_user()
             login(request, user)
             messages.success(request, f"Welcome back, {user.first_name or user.username}!")
+            if user.is_driver:
+                return redirect('fleet:driver_portal')
             return redirect('dashboard:home')
         else:
             messages.error(request, "Invalid username or password.")

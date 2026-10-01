@@ -13,4 +13,9 @@ urlpatterns = [
     path('vehicle/<int:pk>/delete/', views.vehicle_delete, name='vehicle_delete'),
     path('vehicle/<int:vehicle_pk>/maintenance/add/', views.maintenance_create, name='maintenance_create'),
     path('maintenance/<int:pk>/delete/', views.maintenance_delete, name='maintenance_delete'),
+    # Driver Cockpit / Mobile Portal
+    path('portal/', views.driver_portal, name='driver_portal'),
+    path('portal/shipment/<int:pk>/update/', views.driver_update_shipment, name='driver_update_shipment'),
+    path('portal/duty/', views.driver_toggle_duty, name='driver_toggle_duty'),
+    path('portal/report-issue/', views.driver_report_issue, name='driver_report_issue'),
 ]

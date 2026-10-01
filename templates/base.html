@@ -313,6 +313,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'driver_portal' %}active{% endif %}" href="{% url 'fleet:driver_portal' %}">
+                            <i class="bi bi-steering-wheel"></i> Driver Cockpit
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'fleet_map' %}active{% endif %}" href="{% url 'fleet:fleet_map' %}">
                             <i class="bi bi-map"></i> Live GIS Fleet Map
                         </a>
