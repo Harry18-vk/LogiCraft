@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: logicraft
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn logicraft.wsgi:application"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: USE_SQLITE
+        value: "False"
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+    plan: free
+
+databases:
+  - name: logicraft-db
+    plan: free
+    databaseName: logicraft_db
+    user: logicraft_user
