@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Fleet & Driver Operations - LogiCraft{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-0 text-dark">Fleet & Drivers Management</h3>
+        <p class="text-muted mb-0 small">Monitor vehicle telemetry, driver allocation, and maintenance health records.</p>
+    </div>
+    <a href="{% url 'fleet:vehicle_create' %}" class="btn btn-primary btn-sm px-3">
+        <i class="bi bi-plus-circle me-1"></i> Register Vehicle
+    </a>
+</div>
+
+<!-- Vehicles Table -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-truck text-primary me-2"></i>Vehicles In Service</h5>
+        <span class="badge bg-light text-dark border">{{ vehicles.count }} Total Assets</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light" style="font-size: 0.8rem;">
+                <tr>
+                    <th>REG NUMBER</th>
+                    <th>MODEL / MAKE</th>
+                    <th>TYPE</th>
+                    <th>CAPACITY</th>
+                    <th>FUEL</th>
+                    <th>ODOMETER</th>
+                    <th>STATUS</th>
+                    <th>LOCATION</th>
+                    <th>ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in vehicles %}
+                <tr>
+                    <td><span class="fw-bold text-dark font-monospace">{{ v.reg_number }}</span></td>
+                    <td>{{ v.model_name }}</td>
+                    <td><span class="badge bg-light text-secondary border">{{ v.get_vehicle_type_display }}</span></td>
+                    <td>
+                        {{ v.capacity_kg }} kg
+                        {% if v.passenger_capacity > 0 %}
+                            <br><small class="text-muted">({{ v.passenger_capacity }} seats)</small>
+                        {% endif %}
+                    </td>
+                    <td><small>{{ v.get_fuel_type_display }}</small></td>
+                    <td>{{ v.odometer_km }} km</td>
+                    <td>
+                        {% if v.status == 'AVAILABLE' %}
+                            <span class="badge bg-success-subtle text-success badge-status">Available</span>
+                        {% elif v.status == 'ON_TRIP' %}
+                            <span class="badge bg-primary-subtle text-primary badge-status">On Trip</span>
+                        {% else %}
+                            <span class="badge bg-warning-subtle text-warning badge-status">{{ v.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td><small class="text-muted">{{ v.current_location|default:"Base Hub" }}</small></td>
+                    <td>
+                        <a href="{% url 'fleet:vehicle_detail' v.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" class="text-center text-muted py-4">No fleet vehicles found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Drivers Table -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-person-badge text-info me-2"></i>Certified Drivers</h5>
+        <span class="badge bg-light text-dark border">{{ drivers.count }} Registered</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light" style="font-size: 0.8rem;">
+                <tr>
+                    <th>NAME</th>
+                    <th>LICENSE #</th>
+                    <th>EXPERIENCE</th>
+                    <th>ASSIGNED VEHICLE</th>
+                    <th>DUTY STATUS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in drivers %}
+                <tr>
+                    <td class="fw-semibold">{{ d.user.get_full_name|default:d.user.username }}</td>
+                    <td><span class="font-monospace text-muted">{{ d.license_number }}</span></td>
+                    <td>{{ d.years_of_experience }} Years</td>
+                    <td>
+                        {% if d.assigned_vehicle %}
+                            <span class="badge bg-light text-dark border font-monospace">{{ d.assigned_vehicle.reg_number }}</span>
+                        {% else %}
+                            <span class="text-muted small">None</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if d.status == 'ON_DUTY' %}
+                            <span class="badge bg-success-subtle text-success badge-status">On Duty</span>
+                        {% elif d.status == 'ON_TRIP' %}
+                            <span class="badge bg-primary-subtle text-primary badge-status">On Trip</span>
+                        {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary badge-status">{{ d.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No drivers registered.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

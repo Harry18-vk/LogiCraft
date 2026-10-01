@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Passenger Bookings - LogiCraft{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-0 text-dark">Passenger Bookings & Electronic Tickets</h3>
+        <p class="text-muted mb-0 small">Passenger manifests, boarding passes, and fare revenues.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'bookings:export_csv' %}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export Bookings CSV
+        </a>
+        <a href="{% url 'transport:route_list' %}" class="btn btn-primary btn-sm px-3">
+            <i class="bi bi-search me-1"></i> Search Routes & Book
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light" style="font-size: 0.8rem;">
+                <tr>
+                    <th>TICKET NUMBER</th>
+                    <th>PASSENGER</th>
+                    <th>ROUTE</th>
+                    <th>TRAVEL DATE</th>
+                    <th>DEPARTURE</th>
+                    <th>SEAT</th>
+                    <th>FARE</th>
+                    <th>STATUS</th>
+                    <th>ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in bookings %}
+                <tr>
+                    <td><span class="fw-bold text-dark font-monospace">{{ b.ticket_number }}</span></td>
+                    <td>
+                        <div class="fw-semibold">{{ b.passenger_name }}</div>
+                        <small class="text-muted">{{ b.passenger_phone }}</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-primary border fw-bold">{{ b.schedule.route.route_code }}</span>
+                        <small class="d-block text-muted">{{ b.schedule.route.source_city }} ➔ {{ b.schedule.route.destination_city }}</small>
+                    </td>
+                    <td>{{ b.travel_date }}</td>
+                    <td>{{ b.schedule.departure_time|time:"H:i" }}</td>
+                    <td><span class="badge bg-dark">{{ b.seat_number }}</span></td>
+                    <td class="fw-bold text-success">₹{{ b.fare_paid }}</td>
+                    <td><span class="badge bg-success-subtle text-success badge-status">{{ b.get_status_display }}</span></td>
+                    <td>
+                        <a href="{% url 'bookings:booking_detail' b.id %}" class="btn btn-sm btn-outline-primary">Ticket</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" class="text-center text-muted py-4">No passenger bookings issued yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

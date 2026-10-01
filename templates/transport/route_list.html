@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Transit Routes & Schedules - LogiCraft{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-0 text-dark">Public Transit Routes & Bus Timetables</h3>
+        <p class="text-muted mb-0 small">Intercity coach schedules, departure terminals, and fare tariffs.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for r in routes %}
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <span class="badge bg-primary fs-6 font-monospace">{{ r.route_code }}</span>
+                <span class="badge bg-light text-dark border">{{ r.distance_km }} km &bull; ~{{ r.estimated_duration_hours }} hrs</span>
+            </div>
+
+            <h5 class="fw-bold text-dark mb-1">
+                {{ r.source_city }} <i class="bi bi-arrow-right text-muted mx-1"></i> {{ r.destination_city }}
+            </h5>
+            <div class="text-muted small mb-3">
+                <span><i class="bi bi-geo-alt"></i> {{ r.source_terminal }}</span> ➔ 
+                <span><i class="bi bi-geo-alt-fill"></i> {{ r.destination_terminal }}</span>
+            </div>
+
+            <h6 class="fw-bold text-dark mb-2" style="font-size: 0.85rem;"><i class="bi bi-clock me-1 text-primary"></i>Daily Departures & Schedules:</h6>
+            <div class="list-group list-group-flush border rounded-3 mb-3">
+                {% for s in r.schedules.all %}
+                <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                    <div>
+                        <span class="fw-bold text-dark">{{ s.departure_time|time:"H:i" }}</span>
+                        <small class="text-muted mx-1">➔</small>
+                        <span class="text-secondary">{{ s.arrival_time|time:"H:i" }}</span>
+                        <div class="small text-muted">{{ s.vehicle.model_name|default:"Luxury Bus" }}</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold text-success">₹{{ s.fare }}</div>
+                        <small class="text-muted">{{ s.available_seats }} seats left</small>
+                        <div class="mt-1">
+                            <a href="{% url 'bookings:book_ticket' s.id %}" class="btn btn-sm btn-primary py-0 px-2" style="font-size: 0.78rem;">Book Seat</a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-3 text-center text-muted small">No scheduled trips for this route.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center text-muted py-5">No routes created yet.</div>
+    {% endfor %}
+</div>
+{% endblock %}

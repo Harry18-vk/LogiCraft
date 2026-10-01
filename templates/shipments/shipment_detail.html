@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ shipment.tracking_number }} - Shipment Tracking - LogiCraft{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+    .stepper-container {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        margin-bottom: 2rem;
+    }
+    .stepper-container::before {
+        content: '';
+        position: absolute;
+        top: 18px;
+        left: 20px;
+        right: 20px;
+        height: 4px;
+        background: #e2e8f0;
+        z-index: 1;
+    }
+    .stepper-progress {
+        position: absolute;
+        top: 18px;
+        left: 20px;
+        height: 4px;
+        background: #2563eb;
+        z-index: 2;
+        transition: width 0.4s ease;
+    }
+    .step-item {
+        position: relative;
+        z-index: 3;
+        text-align: center;
+        width: 16%;
+    }
+    .step-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 3px solid #cbd5e1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 8px;
+        font-size: 16px;
+        color: #94a3b8;
+        transition: all 0.3s ease;
+    }
+    .step-item.completed .step-circle {
+        background: #10b981;
+        border-color: #10b981;
+        color: #ffffff;
+    }
+    .step-item.active .step-circle {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #ffffff;
+        box-shadow: 0 0 0 5px rgba(37,99,235,0.25);
+    }
+    .step-label {
+        font-size: 0.76rem;
+        font-weight: 600;
+        color: #64748b;
+    }
+    .step-item.completed .step-label {
+        color: #0f172a;
+    }
+    .step-item.active .step-label {
+        color: #2563eb;
+    }
+    #miniShipmentMap {
+        height: 240px;
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2">
+            <h3 class="fw-bold mb-0 text-dark font-monospace">{{ shipment.tracking_number }}</h3>
+            <span class="badge bg-primary-subtle text-primary badge-status">{{ shipment.get_current_status_display }}</span>
+        </div>
+        <p class="text-muted mb-0 small">Registered on {{ shipment.created_at|date:"M d, Y H:i" }} &bull; Current Status: <strong>{{ shipment.get_current_status_display }}</strong></p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'shipments:shipment_waybill' shipment.id %}" target="_blank" class="btn btn-outline-dark btn-sm">
+            <i class="bi bi-file-earmark-text me-1"></i> Print Official Waybill
+        </a>
+        <a href="{% url 'shipments:shipment_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Shipments List
+        </a>
+    </div>
+</div>
+
+<!-- Horizontal Milestone Stepper Card -->
+<div class="card border-0 shadow-sm p-4 mb-4">
+    <h6 class="fw-bold text-dark mb-4 text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.5px;">Milestone Progress Tracker</h6>
+    <div class="stepper-container">
+        <div class="stepper-progress" style="width: {{ progress_pct }}%;"></div>
+
+        <!-- 1. Booked -->
+        <div class="step-item {% if 'BOOKED' in completed_stages %}completed{% endif %} {% if shipment.current_status == 'BOOKED' %}active{% endif %}">
+            <div class="step-circle"><i class="bi bi-check-lg"></i></div>
+            <div class="step-label">1. Booked</div>
+        </div>
+
+        <!-- 2. Picked Up -->
+        <div class="step-item {% if 'PICKED_UP' in completed_stages %}completed{% endif %} {% if shipment.current_status == 'PICKED_UP' %}active{% endif %}">
+            <div class="step-circle">{% if 'PICKED_UP' in completed_stages %}<i class="bi bi-check-lg"></i>{% else %}2{% endif %}</div>
+            <div class="step-label">2. Picked Up</div>
+        </div>
+
+        <!-- 3. At Hub -->
+        <div class="step-item {% if 'AT_HUB' in completed_stages %}completed{% endif %} {% if shipment.current_status == 'AT_HUB' %}active{% endif %}">
+            <div class="step-circle">{% if 'AT_HUB' in completed_stages %}<i class="bi bi-check-lg"></i>{% else %}3{% endif %}</div>
+            <div class="step-label">3. At Hub</div>
+        </div>
+
+        <!-- 4. In Transit -->
+        <div class="step-item {% if 'IN_TRANSIT' in completed_stages %}completed{% endif %} {% if shipment.current_status == 'IN_TRANSIT' %}active{% endif %}">
+            <div class="step-circle">{% if 'IN_TRANSIT' in completed_stages %}<i class="bi bi-truck"></i>{% else %}4{% endif %}</div>
+            <div class="step-label">4. In Transit</div>
+        </div>
+
+        <!-- 5. Out For Delivery -->
+        <div class="step-item {% if 'OUT_FOR_DELIVERY' in completed_stages %}completed{% endif %} {% if shipment.current_status == 'OUT_FOR_DELIVERY' %}active{% endif %}">
+            <div class="step-circle">{% if 'OUT_FOR_DELIVERY' in completed_stages %}<i class="bi bi-box-arrow-right"></i>{% else %}5{% endif %}</div>
+            <div class="step-label">5. Out for Delivery</div>
+        </div>
+
+        <!-- 6. Delivered -->
+        <div class="step-item {% if 'DELIVERED' in completed_stages %}completed{% endif %} {% if shipment.current_status == 'DELIVERED' %}active{% endif %}">
+            <div class="step-circle">{% if 'DELIVERED' in completed_stages %}<i class="bi bi-house-check-fill"></i>{% else %}6{% endif %}</div>
+            <div class="step-label">6. Delivered</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left: Consignment Details -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm p-4 mb-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-box-seam text-primary me-2"></i>Consignment Information</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3">
+                        <span class="text-muted small text-uppercase fw-semibold d-block">Shipper / Sender</span>
+                        <div class="fw-bold mt-1">{{ shipment.sender_name }}</div>
+                        <small class="text-muted d-block">{{ shipment.sender_phone }}</small>
+                        <small class="text-secondary">{{ shipment.sender_address }}</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3">
+                        <span class="text-muted small text-uppercase fw-semibold d-block">Consignee / Receiver</span>
+                        <div class="fw-bold mt-1">{{ shipment.receiver_name }}</div>
+                        <small class="text-muted d-block">{{ shipment.receiver_phone }}</small>
+                        <small class="text-secondary">{{ shipment.receiver_address }}</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-2">
+                <div class="col-md-4">
+                    <div class="p-2 border rounded text-center">
+                        <small class="text-muted d-block">Weight</small>
+                        <span class="fw-bold fs-6">{{ shipment.weight_kg }} kg</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-2 border rounded text-center">
+                        <small class="text-muted d-block">Freight Cost</small>
+                        <span class="fw-bold fs-6 text-success">₹{{ shipment.shipping_cost }}</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-2 border rounded text-center">
+                        <small class="text-muted d-block">Est. Delivery</small>
+                        <span class="fw-bold fs-6">{{ shipment.estimated_delivery|default:"TBD" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-truck text-secondary me-2"></i>Assigned Transport Asset & Driver</h6>
+            <div class="d-flex justify-content-between align-items-center p-3 border rounded-3 bg-white mb-3">
+                <div>
+                    {% if shipment.assigned_vehicle %}
+                        <div class="fw-bold font-monospace">{{ shipment.assigned_vehicle.reg_number }}</div>
+                        <small class="text-muted">{{ shipment.assigned_vehicle.model_name }}</small>
+                    {% else %}
+                        <span class="text-muted small">No vehicle assigned yet</span>
+                    {% endif %}
+                </div>
+                <div>
+                    {% if shipment.assigned_driver %}
+                        <span class="badge bg-light text-dark border p-2">
+                            <i class="bi bi-person-badge me-1"></i> Driver: {{ shipment.assigned_driver.user.get_full_name|default:shipment.assigned_driver.user.username }}
+                        </span>
+                    {% else %}
+                        <span class="text-muted small">No driver assigned</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Mini Route Map -->
+            <div class="mt-3">
+                <small class="text-muted fw-semibold d-block mb-2"><i class="bi bi-map me-1"></i>Route Corridors & Checkpoints</small>
+                <div id="miniShipmentMap"></div>
+            </div>
+        </div>
+
+        <!-- Post Status Update Milestone -->
+        <div class="card border-0 shadow-sm p-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-geo-alt text-danger me-2"></i>Post Milestone Checkpoint Update</h5>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">New Milestone Status *</label>
+                        <select name="status" class="form-select" required>
+                            {% for code, label in status_choices %}
+                                <option value="{{ code }}" {% if shipment.current_status == code %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">Checkpoint / City / Hub *</label>
+                        <input type="text" name="location_checkpoint" class="form-control" placeholder="e.g. Jaipur Toll Plaza, NH48" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small">Operational Notes / Remarks</label>
+                        <input type="text" name="notes" class="form-control" placeholder="e.g. Scanned at outbound sorting terminal.">
+                    </div>
+                </div>
+                <div class="mt-3 text-end">
+                    <button type="submit" class="btn btn-primary px-3">Update Tracking Milestone</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Right: Milestones Timeline -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <h5 class="fw-bold text-dark mb-4"><i class="bi bi-clock-history text-info me-2"></i>Milestone Tracking History</h5>
+            <div class="timeline ps-2">
+                {% for log in timeline %}
+                <div class="timeline-step">
+                    <div class="timeline-icon"></div>
+                    <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ log.get_status_display }}</div>
+                    <div class="text-muted small mt-1">
+                        <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ log.location_checkpoint }}
+                    </div>
+                    {% if log.notes %}
+                        <div class="text-secondary small mt-1 bg-light p-2 rounded">{{ log.notes }}</div>
+                    {% endif %}
+                    <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">{{ log.timestamp|date:"M d, Y - H:i:s" }}</small>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted py-4">No checkpoint logs recorded.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    // Initialize mini map
+    const miniMap = L.map('miniShipmentMap').setView([24.0, 76.0], 5);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, TomTom'
+    }).addTo(miniMap);
+
+    const originLat = {% if shipment.origin_warehouse %}{{ shipment.origin_warehouse.latitude|default:"28.5355" }}{% else %}28.5355{% endif %};
+    const originLng = {% if shipment.origin_warehouse %}{{ shipment.origin_warehouse.longitude|default:"77.2678" }}{% else %}77.2678{% endif %};
+    const destLat = {% if shipment.destination_warehouse %}{{ shipment.destination_warehouse.latitude|default:"19.0560" }}{% else %}19.0560{% endif %};
+    const destLng = {% if shipment.destination_warehouse %}{{ shipment.destination_warehouse.longitude|default:"73.0169" }}{% else %}73.0169{% endif %};
+
+    const originMarker = L.marker([originLat, originLng]).addTo(miniMap)
+        .bindPopup("<strong>Origin Hub</strong><br>{{ shipment.origin_warehouse.name|default:'Shipper Location' }}");
+
+    const destMarker = L.marker([destLat, destLng]).addTo(miniMap)
+        .bindPopup("<strong>Destination Hub</strong><br>{{ shipment.destination_warehouse.name|default:'Consignee Location' }}");
+
+    const routeLine = L.polyline([[originLat, originLng], [destLat, destLng]], {
+        color: '#2563eb',
+        weight: 3,
+        dashArray: '6, 6'
+    }).addTo(miniMap);
+
+    {% if shipment.assigned_vehicle and shipment.assigned_vehicle.latitude %}
+    const vehMarker = L.circleMarker([{{ shipment.assigned_vehicle.latitude }}, {{ shipment.assigned_vehicle.longitude }}], {
+        radius: 8,
+        fillColor: '#10b981',
+        color: '#ffffff',
+        weight: 2,
+        fillOpacity: 0.9
+    }).addTo(miniMap).bindPopup("<strong>Current Vehicle Location</strong><br>{{ shipment.assigned_vehicle.reg_number }} ({{ shipment.assigned_vehicle.current_location }})").openPopup();
+    {% endif %}
+
+    miniMap.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+</script>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ warehouse.name }} - Inventory - LogiCraft{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2">
+            <h3 class="fw-bold mb-0 text-dark">{{ warehouse.name }}</h3>
+            <span class="badge bg-secondary font-monospace">{{ warehouse.code }}</span>
+        </div>
+        <p class="text-muted mb-0 small">{{ warehouse.address }} &bull; Manager: {{ warehouse.manager_name }} ({{ warehouse.contact_phone }})</p>
+    </div>
+    <a href="{% url 'warehouse:warehouse_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Back to Hubs
+    </a>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Inventory Table -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-boxes text-primary me-2"></i>Stock Inventory Items</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light" style="font-size: 0.8rem;">
+                        <tr>
+                            <th>SKU</th>
+                            <th>ITEM NAME</th>
+                            <th>CATEGORY</th>
+                            <th>QUANTITY</th>
+                            <th>UNIT WT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td><span class="fw-bold font-monospace text-primary">{{ item.sku }}</span></td>
+                            <td>{{ item.item_name }}</td>
+                            <td><span class="badge bg-light text-secondary border">{{ item.get_category_display }}</span></td>
+                            <td>
+                                <span class="fw-bold {% if item.quantity < item.reorder_level %}text-danger{% else %}text-success{% endif %}">
+                                    {{ item.quantity }}
+                                </span>
+                            </td>
+                            <td><small>{{ item.unit_weight_kg }} kg</small></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-4">No inventory items in this warehouse.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Add/Update Form -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-plus-circle text-success me-2"></i>Add / Update Stock</h5>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">SKU Code *</label>
+                    <input type="text" name="sku" class="form-control" placeholder="e.g. SKU-RET-101" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Item Name *</label>
+                    <input type="text" name="item_name" class="form-control" placeholder="e.g. Solar Panels 400W" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Category *</label>
+                    <select name="category" class="form-select" required>
+                        {% for code, label in categories %}
+                            <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Quantity In Stock *</label>
+                    <input type="number" name="quantity" class="form-control" min="0" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Unit Weight (KG)</label>
+                    <input type="number" step="0.01" name="unit_weight_kg" class="form-control" value="1.0">
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Save Item Stock</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

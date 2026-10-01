@@ -1,0 +1,978 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogiCraft — Freight & Logistics Management</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&family=Oswald:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5.3 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        :root {
+            --sky-blue: #3b9af6;
+            --brand-red: #ea3829;
+            --brand-red-hover: #cf2c1e;
+            --brand-blue: #2563eb;
+            --brand-blue-hover: #1d4ed8;
+            --brand-dark: #0b1320;
+            --card-glass: rgba(15, 23, 42, 0.65);
+            --border-glass: rgba(255, 255, 255, 0.22);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #ffffff;
+            color: #111827;
+            overflow-x: hidden;
+        }
+
+        /* Top Navigation Header */
+        .top-navbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            padding: 1.25rem 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
+            color: #ffffff;
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .brand-logo i {
+            font-size: 1.6rem;
+            color: #ffffff;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .nav-pill-btn {
+            background: rgba(255, 255, 255, 0.16);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.32);
+            padding: 0.48rem 1.15rem;
+            border-radius: 9999px;
+            font-size: 0.86rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            cursor: pointer;
+        }
+
+        .nav-pill-btn:hover {
+            background: #ffffff;
+            color: #0b1320;
+            border-color: #ffffff;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+
+        .nav-signin-highlight {
+            background: var(--brand-blue);
+            border-color: var(--brand-blue);
+            color: #ffffff;
+        }
+
+        .nav-signin-highlight:hover {
+            background: var(--brand-blue-hover);
+            border-color: var(--brand-blue-hover);
+            color: #ffffff;
+        }
+
+        /* Hero Banner Section */
+        .hero-section {
+            position: relative;
+            width: 100%;
+            min-height: 650px;
+            background: #09121f url("{% static 'images/logicraft_hero_bg.jpg' %}") no-repeat center top;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            padding-top: 5.5rem;
+            padding-bottom: 3.5rem;
+        }
+
+        @media (max-width: 992px) {
+            .hero-section {
+                padding-top: 6rem;
+                padding-bottom: 3rem;
+                min-height: auto;
+            }
+        }
+
+        .hero-container {
+            width: 100%;
+            max-width: 1320px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Left Hero Intro Card */
+        .hero-intro-card {
+            max-width: 540px;
+            background: linear-gradient(135deg, rgba(16, 29, 56, 0.72) 0%, rgba(15, 23, 42, 0.62) 100%);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 20px;
+            padding: 2.4rem 2.5rem;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            position: relative;
+        }
+
+        .portal-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 0.95rem;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 9999px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 1.1px;
+            text-transform: uppercase;
+            color: #e2e8f0;
+            margin-bottom: 1.15rem;
+        }
+
+        .hero-title {
+            font-family: 'Oswald', 'Bebas Neue', sans-serif;
+            font-size: 2.35rem;
+            font-weight: 700;
+            line-height: 1.12;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+        }
+
+        .hero-title .highlight-blue {
+            color: #60a5fa;
+        }
+
+        .hero-subtitle {
+            font-size: 0.92rem;
+            line-height: 1.55;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 1.8rem;
+            font-weight: 400;
+        }
+
+        .hero-actions-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* "Get Started" Primary Hero Button */
+        .btn-get-started {
+            background-color: #ffffff;
+            color: #0b1320;
+            border: none;
+            border-radius: 10px;
+            padding: 0.82rem 1.95rem;
+            font-size: 0.96rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.65rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+        }
+
+        .btn-get-started:hover {
+            background-color: #f1f5f9;
+            color: var(--brand-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+        }
+
+        .btn-get-started i.arrow-icon {
+            transition: transform 0.2s ease;
+        }
+
+        .btn-get-started:hover i.arrow-icon {
+            transform: translateX(4px);
+        }
+
+        .btn-track-outline {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            border-radius: 10px;
+            padding: 0.8rem 1.4rem;
+            font-size: 0.92rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            transition: all 0.25s ease;
+        }
+
+        .btn-track-outline:hover {
+            background: rgba(255, 255, 255, 0.22);
+            color: #ffffff;
+            border-color: #ffffff;
+        }
+
+        /* Right Side: Frosted Glass Login Credential Box */
+        .login-box-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        @keyframes slideInFromRight {
+            0% {
+                opacity: 0;
+                transform: translateX(50px) scale(0.96);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        .animate-appear-right {
+            animation: slideInFromRight 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .glass-login-box {
+            width: 100%;
+            max-width: 440px;
+            background: linear-gradient(135deg, rgba(11, 19, 32, 0.86) 0%, rgba(15, 23, 42, 0.78) 100%);
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 20px;
+            padding: 2.2rem 2.3rem;
+            box-shadow: 0 25px 65px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            position: relative;
+        }
+
+        .login-box-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+
+        .card-brand-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+        }
+
+        .card-brand-badge i {
+            font-size: 1.5rem;
+            color: #3b82f6;
+        }
+
+        .card-brand-text {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            line-height: 1.1;
+        }
+
+        .card-portal-sub {
+            font-size: 0.66rem;
+            font-weight: 700;
+            letter-spacing: 1.3px;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+
+        .btn-close-box {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #94a3b8;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-close-box:hover {
+            background: rgba(255, 255, 255, 0.22);
+            color: #ffffff;
+        }
+
+        .login-card-title {
+            font-size: 1.65rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 0.2rem;
+            letter-spacing: -0.3px;
+        }
+
+        .login-card-sub {
+            font-size: 0.82rem;
+            color: #94a3b8;
+            margin-bottom: 1.35rem;
+        }
+
+        /* Form Inputs */
+        .glass-field-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .glass-field-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: #cbd5e1;
+            margin-bottom: 0.4rem;
+            display: block;
+        }
+
+        .glass-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .glass-input-icon {
+            position: absolute;
+            left: 14px;
+            color: #94a3b8;
+            font-size: 1.05rem;
+            pointer-events: none;
+        }
+
+        .glass-text-input {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 0.72rem 2.6rem 0.72rem 2.6rem;
+            color: #ffffff;
+            font-size: 0.92rem;
+            transition: all 0.2s ease;
+        }
+
+        .glass-text-input:focus {
+            background-color: rgba(255, 255, 255, 0.14);
+            border-color: #60a5fa;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+        }
+
+        .glass-text-input::placeholder {
+            color: #64748b;
+        }
+
+        .glass-pwd-toggle {
+            position: absolute;
+            right: 14px;
+            color: #94a3b8;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .glass-pwd-toggle:hover {
+            color: #ffffff;
+        }
+
+        .remember-forgot-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .remember-check-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            color: #cbd5e1;
+            cursor: pointer;
+        }
+
+        .remember-check-wrap input {
+            cursor: pointer;
+            accent-color: var(--brand-blue);
+        }
+
+        .forgot-link {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .forgot-link:hover {
+            color: #60a5fa;
+        }
+
+        /* Sign In Button */
+        .btn-portal-submit {
+            width: 100%;
+            background-color: var(--brand-blue);
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            padding: 0.82rem 1.25rem;
+            font-size: 0.94rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-portal-submit:hover {
+            background-color: var(--brand-blue-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.55);
+        }
+
+        /* Security Footnote */
+        .security-footnote {
+            margin-top: 1.35rem;
+            padding: 0.65rem 0.95rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            font-size: 0.72rem;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Bottom Section (White Background) */
+        .about-section {
+            background-color: #ffffff;
+            padding: 4.5rem 0 5rem 0;
+        }
+
+        .about-header-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 3rem;
+            margin-bottom: 3.5rem;
+        }
+
+        @media (max-width: 992px) {
+            .about-header-row {
+                flex-direction: column;
+                gap: 1.2rem;
+            }
+        }
+
+        .pill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.45rem 1.15rem;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: #1e293b;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            white-space: nowrap;
+        }
+
+        .pill-badge .spark-icon {
+            color: #f97316;
+            font-size: 0.95rem;
+        }
+
+        .about-headline {
+            font-family: 'Oswald', sans-serif;
+            font-size: 2.35rem;
+            font-weight: 800;
+            line-height: 1.18;
+            letter-spacing: 0.2px;
+            text-transform: uppercase;
+            color: #0b1320;
+            max-width: 880px;
+        }
+
+        @media (max-width: 768px) {
+            .about-headline {
+                font-size: 1.7rem;
+            }
+        }
+
+        /* Feature Cards Grid */
+        .feature-card {
+            background: #ffffff;
+            border: 1px solid #f1f5f9;
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: #e2e8f0;
+            box-shadow: 0 16px 36px rgba(0,0,0,0.08);
+        }
+
+        .feature-icon-wrapper {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .icon-fleet {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .icon-shipment {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .icon-warehouse {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .icon-transit {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .feature-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #0f172a;
+            margin-bottom: 0.6rem;
+            letter-spacing: 0.3px;
+        }
+
+        .feature-desc {
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.55;
+            margin-bottom: 1.2rem;
+            flex-grow: 1;
+        }
+
+        .feature-link {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #0f172a;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: gap 0.2s ease, color 0.2s ease;
+        }
+
+        .feature-link:hover {
+            color: #ea3829;
+            gap: 0.65rem;
+        }
+
+        /* Footer */
+        .page-footer {
+            background: #0b1320;
+            color: #94a3b8;
+            padding: 2.5rem 0;
+            border-top: 1px solid #1e293b;
+        }
+
+        .page-footer a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .page-footer a:hover {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation Header -->
+    <header class="top-navbar">
+        <a href="/" class="brand-logo">
+            <i class="bi bi-box-seam-fill"></i>
+            <span>LOGICRAFT</span>
+        </a>
+        <div class="nav-actions">
+            <a href="/shipments/track/" class="nav-pill-btn">
+                <i class="bi bi-geo-alt-fill text-warning"></i>
+                <span>Track Cargo</span>
+            </a>
+            <button type="button" class="nav-pill-btn nav-signin-highlight" onclick="showLoginBox()">
+                <i class="bi bi-person-fill"></i>
+                <span>Sign In</span>
+            </button>
+            <a href="/admin/" class="nav-pill-btn d-none d-md-inline-flex">
+                <i class="bi bi-shield-lock-fill"></i>
+                <span>Admin</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Hero Banner with 3D Red Suspended Container & Background Text -->
+    <section class="hero-section">
+        <div class="hero-container">
+            <div class="row align-items-center g-4">
+                <!-- Left Side: Hero Intro Card with "Get Started" Action -->
+                <div class="col-lg-6 col-12">
+                    <div class="hero-intro-card">
+                        <div class="portal-badge-pill">
+                            <i class="bi bi-broadcast text-danger"></i>
+                            <span>ENTERPRISE LOGISTICS PORTAL</span>
+                        </div>
+                        <h1 class="hero-title">
+                            DELIVERING THE FUTURE OF <span class="highlight-blue">FREIGHT MANAGEMENT</span>
+                        </h1>
+                        <p class="hero-subtitle">
+                            We provide fast, secure, and cost-effective logistics solutions that streamline supply chains and keep businesses moving efficiently with reliable transportation and warehousing.
+                        </p>
+                        <div class="hero-actions-row">
+                            <button type="button" class="btn-get-started" id="btnGetStarted" onclick="showLoginBox()">
+                                <i class="bi bi-box-arrow-in-right text-primary"></i>
+                                <span>Get Started</span>
+                                <i class="bi bi-arrow-right arrow-icon"></i>
+                            </button>
+                            <a href="/shipments/track/" class="btn-track-outline">
+                                <i class="bi bi-geo-alt-fill text-warning"></i>
+                                <span>Track Cargo</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Login Credential Box (Appears when "Get Started" is clicked) -->
+                <div class="col-lg-6 col-12" id="loginBoxWrapper" style="display: none;">
+                    <div class="login-box-wrapper">
+                        <div class="glass-login-box" id="loginCredentialBox">
+                            <!-- Card Header with Brand & Close Button -->
+                            <div class="login-box-header">
+                                <div class="card-brand-badge">
+                                    <i class="bi bi-box-seam-fill"></i>
+                                    <div>
+                                        <div class="card-brand-text">LOGICRAFT</div>
+                                        <div class="card-portal-sub">ENTERPRISE PORTAL</div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-close-box" onclick="hideLoginBox()" title="Close login form">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+
+                            <h2 class="login-card-title">Welcome Back</h2>
+                            <p class="login-card-sub">Sign in to access fleet operations &amp; telemetry</p>
+
+                            <!-- Django Flash Error Messages -->
+                            {% if messages %}
+                                <div class="mb-3">
+                                    {% for message in messages %}
+                                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} py-2 px-3 small rounded-3 border-0 d-flex align-items-center justify-content-between shadow-sm" role="alert" style="background: rgba(239, 68, 68, 0.22); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.45);">
+                                            <span><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ message }}</span>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <!-- Login Form -->
+                            <form method="POST" action="{% url 'users:login' %}">
+                                {% csrf_token %}
+                                {% if request.GET.next %}
+                                    <input type="hidden" name="next" value="{{ request.GET.next }}">
+                                {% endif %}
+
+                                <!-- Username -->
+                                <div class="glass-field-group">
+                                    <label class="glass-field-label" for="usernameInput">USERNAME OR STAFF ID</label>
+                                    <div class="glass-input-wrapper">
+                                        <i class="bi bi-person glass-input-icon"></i>
+                                        <input type="text" 
+                                               id="usernameInput" 
+                                               name="username" 
+                                               class="glass-text-input" 
+                                               placeholder="Enter username" 
+                                               required 
+                                               autocomplete="username"
+                                               value="{{ form.username.value|default:'' }}">
+                                    </div>
+                                </div>
+
+                                <!-- Password -->
+                                <div class="glass-field-group">
+                                    <label class="glass-field-label" for="passwordInput">PASSWORD</label>
+                                    <div class="glass-input-wrapper">
+                                        <i class="bi bi-lock glass-input-icon"></i>
+                                        <input type="password" 
+                                               id="passwordInput" 
+                                               name="password" 
+                                               class="glass-text-input" 
+                                               placeholder="Enter password" 
+                                               required 
+                                               autocomplete="current-password">
+                                        <i class="bi bi-eye glass-pwd-toggle" id="togglePasswordIcon" onclick="togglePasswordVisibility()" title="Toggle visibility"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Remember & Forgot -->
+                                <div class="remember-forgot-row">
+                                    <label class="remember-check-wrap">
+                                        <input type="checkbox" name="remember_me" checked>
+                                        <span>Remember me</span>
+                                    </label>
+                                    <a href="#" class="forgot-link" onclick="handleForgotPassword(event)">Forgot password?</a>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <button type="submit" class="btn-portal-submit">
+                                    <span>Sign In to Portal</span>
+                                    <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </form>
+
+                            <!-- Security Footnote -->
+                            <div class="security-footnote">
+                                <i class="bi bi-shield-check text-primary me-2"></i>
+                                <span>Encrypted session with role-based access control.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bottom White Content Section -->
+    <section class="about-section">
+        <div class="container">
+            <!-- Header Row with Pill and Big Bold Headline -->
+            <div class="about-header-row">
+                <div class="pill-badge">
+                    <i class="bi bi-stars spark-icon"></i>
+                    <span>ABOUT US</span>
+                </div>
+                <h2 class="about-headline">
+                    AS A TRUSTED LOGISTICS PARTNER WE DELIVER FULLY INTEGRATED SUPPLY CHAIN SOLUTIONS DESIGNED FOR PERFORMANCE
+                </h2>
+            </div>
+
+            <!-- 4 Module Capability Cards -->
+            <div class="row g-4 mt-2">
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="feature-icon-wrapper icon-fleet">
+                            <i class="bi bi-truck-front-fill"></i>
+                        </div>
+                        <h3 class="feature-title">Fleet & Drivers</h3>
+                        <p class="feature-desc">
+                            Vehicle payloads, powertrain telematics, certified drivers, and real-time maintenance logging.
+                        </p>
+                        <a href="/fleet/" class="feature-link">
+                            Explore Fleet <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="feature-icon-wrapper icon-shipment">
+                            <i class="bi bi-box-seam-fill"></i>
+                        </div>
+                        <h3 class="feature-title">Freight Tracking</h3>
+                        <p class="feature-desc">
+                            Real-time milestone checkpoints, consignment manifests, and instant public tracking.
+                        </p>
+                        <a href="/shipments/track/" class="feature-link">
+                            Track Cargo Live <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="feature-icon-wrapper icon-warehouse">
+                            <i class="bi bi-buildings-fill"></i>
+                        </div>
+                        <h3 class="feature-title">Warehouses</h3>
+                        <p class="feature-desc">
+                            Regional sorting hubs, SKU threshold notifications, unit weight metrics, and storage capacities.
+                        </p>
+                        <a href="/warehouse/" class="feature-link">
+                            View Hubs <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="feature-icon-wrapper icon-transit">
+                            <i class="bi bi-bus-front-fill"></i>
+                        </div>
+                        <h3 class="feature-title">Transit & Booking</h3>
+                        <p class="feature-desc">
+                            Intercity passenger transit lines, automated ticketing, dynamic tariffs, and electronic boarding passes.
+                        </p>
+                        <a href="/bookings/" class="feature-link">
+                            Book Tickets <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Page Footer -->
+    <footer class="page-footer">
+        <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 text-center text-md-start">
+            <div>
+                <span class="fw-bold text-white font-monospace">LOGICRAFT</span> — Enterprise Logistics & Fleet Management System
+            </div>
+            <div class="d-flex gap-3 small">
+                <a href="/shipments/track/">Public Tracking</a>
+                <span>•</span>
+                <a href="/admin/">Administration</a>
+                <span>•</span>
+                <span class="text-secondary">&copy; 2026 LogiCraft Inc.</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Interactive Scripts for "Get Started" Reveal and Login Box -->
+    <script>
+        // Show Login Box on the Right side when "Get Started" is clicked
+        function showLoginBox() {
+            const wrapper = document.getElementById('loginBoxWrapper');
+            const box = document.getElementById('loginCredentialBox');
+            const uInput = document.getElementById('usernameInput');
+
+            if (wrapper) {
+                wrapper.style.display = 'block';
+                if (box) {
+                    box.classList.remove('animate-appear-right');
+                    void box.offsetWidth; // Trigger CSS reflow
+                    box.classList.add('animate-appear-right');
+                }
+
+                // If on mobile/tablet, smoothly scroll to login box
+                if (window.innerWidth < 992) {
+                    wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+
+            if (uInput) {
+                setTimeout(() => uInput.focus(), 250);
+            }
+        }
+
+        // Hide Login Box
+        function hideLoginBox() {
+            const wrapper = document.getElementById('loginBoxWrapper');
+            if (wrapper) {
+                wrapper.style.display = 'none';
+            }
+        }
+
+        // Password Visibility Toggle
+        function togglePasswordVisibility() {
+            const pwd = document.getElementById('passwordInput');
+            const icon = document.getElementById('togglePasswordIcon');
+            if (!pwd || !icon) return;
+
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                pwd.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+
+        // Forgot password notice
+        function handleForgotPassword(e) {
+            e.preventDefault();
+            alert('Password resets are managed by system administrators. Please contact your system supervisor to request account assistance.');
+        }
+
+        // Auto open if redirected with errors or next parameter
+        document.addEventListener('DOMContentLoaded', function () {
+            {% if messages or request.GET.next or request.GET.login %}
+                showLoginBox();
+            {% endif %}
+        });
+    </script>
+</body>
+</html>

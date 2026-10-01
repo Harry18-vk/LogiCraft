@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Ticket {{ booking.ticket_number }} - LogiCraft{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        body {
+            background: #ffffff !important;
+        }
+        .sidebar, .top-navbar, footer, .no-print {
+            display: none !important;
+        }
+        main {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+        .boarding-pass-card {
+            box-shadow: none !important;
+            border: 2px solid #000000 !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+            <h4 class="fw-bold mb-0 text-dark">Electronic Boarding Pass & Ticket</h4>
+            <div class="d-flex gap-2">
+                <button onclick="window.print()" class="btn btn-outline-dark btn-sm px-3">
+                    <i class="bi bi-printer me-1"></i> Print / Save as PDF
+                </button>
+                <a href="{% url 'bookings:booking_list' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-list-check me-1"></i> All Bookings
+                </a>
+            </div>
+        </div>
+
+        <!-- Boarding Pass Card -->
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden boarding-pass-card">
+            <div class="bg-primary text-white p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-uppercase fw-semibold" style="letter-spacing: 1px; font-size: 0.78rem;">LogiCraft Intercity Coach Network</span>
+                        <h3 class="fw-bold mb-0 mt-1">{{ booking.schedule.route.source_city }} <i class="bi bi-arrow-right mx-2"></i> {{ booking.schedule.route.destination_city }}</h3>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-white text-primary fs-6 font-monospace p-2">{{ booking.ticket_number }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-4 bg-white">
+                <div class="row g-4 align-items-center">
+                    <div class="col-md-8">
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <small class="text-muted text-uppercase fw-semibold d-block">Passenger Name</small>
+                                <span class="fw-bold fs-5 text-dark">{{ booking.passenger_name }}</span>
+                            </div>
+                            <div class="col-md-5">
+                                <small class="text-muted text-uppercase fw-semibold d-block">Seat Number</small>
+                                <span class="badge bg-dark fs-5 px-3 py-1 font-monospace">{{ booking.seat_number }}</span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <small class="text-muted text-uppercase fw-semibold d-block">Boarding Terminal</small>
+                                <span class="fw-semibold text-secondary">{{ booking.schedule.route.source_terminal }}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted text-uppercase fw-semibold d-block">Arrival Terminal</small>
+                                <span class="fw-semibold text-secondary">{{ booking.schedule.route.destination_terminal }}</span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <small class="text-muted text-uppercase fw-semibold d-block">Travel Date</small>
+                                <span class="fw-bold text-dark">{{ booking.travel_date }}</span>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted text-uppercase fw-semibold d-block">Departure Time</small>
+                                <span class="fw-bold text-primary">{{ booking.schedule.departure_time|time:"H:i" }} hrs</span>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted text-uppercase fw-semibold d-block">Tariff Paid</small>
+                                <span class="fw-bold fs-5 text-success">₹{{ booking.fare_paid }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Digital Verification QR Code -->
+                    <div class="col-md-4 text-center border-start ps-4">
+                        <div id="ticketQrcode" class="d-flex justify-content-center mb-2"></div>
+                        <small class="text-muted d-block fw-semibold" style="font-size: 0.72rem;">SCAN TO VERIFY BOARDING PASS</small>
+                        <span class="badge bg-success-subtle text-success badge-status mt-1">{{ booking.get_status_display }}</span>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center text-muted small">
+                    <span>Gate opens 20 mins prior to departure &bull; Passenger Contact: {{ booking.passenger_phone }}</span>
+                    <span>Route Code: <strong>{{ booking.schedule.route.route_code }}</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- QRCode.js library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    new QRCode(document.getElementById("ticketQrcode"), {
+        text: "LOGICRAFT-PASS|{{ booking.ticket_number }}|{{ booking.passenger_name }}|{{ booking.travel_date }}|{{ booking.seat_number }}",
+        width: 110,
+        height: 110,
+        colorDark : "#0f172a",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.M
+    });
+</script>
+{% endblock %}

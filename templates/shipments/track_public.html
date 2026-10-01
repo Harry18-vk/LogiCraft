@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Your Consignment - LogiCraft</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            min-height: 100vh;
+        }
+        h1, h2, h3, h4, h5, .brand-title {
+            font-family: 'Oswald', sans-serif;
+            letter-spacing: 0.3px;
+        }
+        .tracker-hero {
+            background: linear-gradient(135deg, #0b1320 0%, #1e293b 100%);
+            padding: 3.5rem 1rem;
+            color: #ffffff;
+            text-align: center;
+        }
+        .stepper-container {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin: 1.5rem 0;
+        }
+        .stepper-container::before {
+            content: '';
+            position: absolute;
+            top: 18px;
+            left: 20px;
+            right: 20px;
+            height: 4px;
+            background: #e2e8f0;
+            z-index: 1;
+        }
+        .stepper-progress {
+            position: absolute;
+            top: 18px;
+            left: 20px;
+            height: 4px;
+            background: #2563eb;
+            z-index: 2;
+            transition: width 0.4s ease;
+        }
+        .step-item {
+            position: relative;
+            z-index: 3;
+            text-align: center;
+            width: 16%;
+        }
+        .step-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 3px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 6px;
+            font-size: 15px;
+            color: #94a3b8;
+        }
+        .step-item.completed .step-circle {
+            background: #10b981;
+            border-color: #10b981;
+            color: #ffffff;
+        }
+        .step-item.active .step-circle {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(37,99,235,0.25);
+        }
+        .step-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+        .step-item.completed .step-label { color: #0f172a; }
+        .step-item.active .step-label { color: #2563eb; }
+        .timeline-step {
+            position: relative;
+            padding-left: 32px;
+            margin-bottom: 24px;
+        }
+        .timeline-step::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 6px;
+            bottom: -20px;
+            width: 2px;
+            background: #cbd5e1;
+        }
+        .timeline-step:last-child::before {
+            display: none;
+        }
+        .timeline-icon {
+            position: absolute;
+            left: 0;
+            top: 2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37,99,235,0.2);
+        }
+        #publicShipmentMap {
+            height: 260px;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="tracker-hero">
+    <div class="container" style="max-width: 680px;">
+        <div class="d-inline-flex p-3 bg-white bg-opacity-10 rounded-circle mb-3">
+            <i class="bi bi-box-seam-fill text-info fs-2"></i>
+        </div>
+        <h2 class="fw-bold mb-2">LogiCraft Consignment Tracker</h2>
+        <p class="text-secondary mb-4">Enter your consignment tracking code (e.g. <code>LC-2026-DELMUM</code>) to see real-time milestone checkpoints.</p>
+
+        <form method="GET" class="d-flex gap-2">
+            <input type="text" name="tracking_number" class="form-control form-control-lg fs-6" placeholder="Enter tracking code (e.g. LC-2026-DELMUM)" value="{{ tracking_number }}" required>
+            <button type="submit" class="btn btn-primary btn-lg px-4 fs-6 fw-semibold">Track</button>
+        </form>
+    </div>
+</div>
+
+<div class="container py-5" style="max-width: 860px;">
+    {% if searched %}
+        {% if shipment %}
+            <!-- Milestone Stepper Card -->
+            <div class="card border-0 shadow-sm p-4 mb-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <span class="text-muted small text-uppercase fw-semibold">Consignment Code</span>
+                        <h4 class="fw-bold text-dark font-monospace mb-0">{{ shipment.tracking_number }}</h4>
+                    </div>
+                    <div>
+                        <span class="badge bg-primary-subtle text-primary p-2 fs-6">{{ shipment.get_current_status_display }}</span>
+                    </div>
+                </div>
+
+                <div class="stepper-container">
+                    <div class="stepper-progress" style="width: {{ progress_pct }}%;"></div>
+
+                    <div class="step-item {% if 'BOOKED' in completed_stages %}completed{% endif %} {% if shipment.current_status == 'BOOKED' %}active{% endif %}">
+                        <div class="step-circle"><i class="bi bi-check-lg"></i></div>
+                        <div class="step-label">Booked</div>
+                    </div>
+                    <div class="step-item {% if 'PICKED_UP' in completed_stages %}completed{% endif %} {% if shipment.current_status == 'PICKED_UP' %}active{% endif %}">
+                        <div class="step-circle">{% if 'PICKED_UP' in completed_stages %}<i class="bi bi-check-lg"></i>{% else %}2{% endif %}</div>
+                        <div class="step-label">Picked Up</div>
+                    </div>
+                    <div class="step-item {% if 'AT_HUB' in completed_stages %}completed{% endif %} {% if shipment.current_status == 'AT_HUB' %}active{% endif %}">
+                        <div class="step-circle">{% if 'AT_HUB' in completed_stages %}<i class="bi bi-check-lg"></i>{% else %}3{% endif %}</div>
+                        <div class="step-label">At Hub</div>
+                    </div>
+                    <div class="step-item {% if 'IN_TRANSIT' in completed_stages %}completed{% endif %} {% if shipment.current_status == 'IN_TRANSIT' %}active{% endif %}">
+                        <div class="step-circle">{% if 'IN_TRANSIT' in completed_stages %}<i class="bi bi-truck"></i>{% else %}4{% endif %}</div>
+                        <div class="step-label">In Transit</div>
+                    </div>
+                    <div class="step-item {% if 'OUT_FOR_DELIVERY' in completed_stages %}completed{% endif %} {% if shipment.current_status == 'OUT_FOR_DELIVERY' %}active{% endif %}">
+                        <div class="step-circle">{% if 'OUT_FOR_DELIVERY' in completed_stages %}<i class="bi bi-box-arrow-right"></i>{% else %}5{% endif %}</div>
+                        <div class="step-label">Out for Delivery</div>
+                    </div>
+                    <div class="step-item {% if 'DELIVERED' in completed_stages %}completed{% endif %} {% if shipment.current_status == 'DELIVERED' %}active{% endif %}">
+                        <div class="step-circle">{% if 'DELIVERED' in completed_stages %}<i class="bi bi-house-check-fill"></i>{% else %}6{% endif %}</div>
+                        <div class="step-label">Delivered</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details & Map Card -->
+            <div class="card border-0 shadow-sm p-4 mb-4 bg-white">
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-6">
+                        <small class="text-muted d-block">Origin</small>
+                        <span class="fw-semibold">{{ shipment.sender_address|truncatewords:6 }}</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <small class="text-muted d-block">Destination</small>
+                        <span class="fw-semibold">{{ shipment.receiver_address|truncatewords:6 }}</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <small class="text-muted d-block">Contents</small>
+                        <span>{{ shipment.description }} ({{ shipment.weight_kg }} kg)</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <small class="text-muted d-block">Estimated Arrival</small>
+                        <span class="fw-semibold text-success">{{ shipment.estimated_delivery|default:"In Progress" }}</span>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <small class="text-muted fw-semibold d-block mb-2"><i class="bi bi-geo-alt me-1"></i>Transit Route Overview</small>
+                    <div id="publicShipmentMap"></div>
+                </div>
+            </div>
+
+            <!-- Milestone Tracker -->
+            <div class="card border-0 shadow-sm p-4 bg-white">
+                <h5 class="fw-bold text-dark mb-4"><i class="bi bi-clock-history text-primary me-2"></i>Live Checkpoint Log</h5>
+                <div class="ps-2">
+                    {% for log in timeline %}
+                    <div class="timeline-step">
+                        <div class="timeline-icon"></div>
+                        <div class="fw-bold text-dark">{{ log.get_status_display }}</div>
+                        <div class="text-muted small"><i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ log.location_checkpoint }}</div>
+                        {% if log.notes %}
+                            <div class="text-secondary small mt-1 bg-light p-2 rounded">{{ log.notes }}</div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-1">{{ log.timestamp|date:"M d, Y - H:i" }}</small>
+                    </div>
+                    {% empty %}
+                    <div class="text-muted">No checkpoint updates registered yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-warning text-center p-4">
+                <i class="bi bi-exclamation-triangle fs-3 d-block mb-2"></i>
+                No consignment found with tracking number: <strong>{{ tracking_number }}</strong>.<br>
+                Please double check your consignment code and try again.
+            </div>
+        {% endif %}
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{% url 'dashboard:home' %}" class="btn btn-sm btn-link text-decoration-none">
+            <i class="bi bi-arrow-left"></i> Return to Staff Portal
+        </a>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+{% if shipment %}
+<script>
+    const map = L.map('publicShipmentMap').setView([24.0, 76.0], 5);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, TomTom'
+    }).addTo(map);
+
+    const originLat = {% if shipment.origin_warehouse %}{{ shipment.origin_warehouse.latitude|default:"28.5355" }}{% else %}28.5355{% endif %};
+    const originLng = {% if shipment.origin_warehouse %}{{ shipment.origin_warehouse.longitude|default:"77.2678" }}{% else %}77.2678{% endif %};
+    const destLat = {% if shipment.destination_warehouse %}{{ shipment.destination_warehouse.latitude|default:"19.0560" }}{% else %}19.0560{% endif %};
+    const destLng = {% if shipment.destination_warehouse %}{{ shipment.destination_warehouse.longitude|default:"73.0169" }}{% else %}73.0169{% endif %};
+
+    L.marker([originLat, originLng]).addTo(map).bindPopup("Origin Hub");
+    L.marker([destLat, destLng]).addTo(map).bindPopup("Destination Hub");
+
+    const line = L.polyline([[originLat, originLng], [destLat, destLng]], {
+        color: '#2563eb',
+        weight: 3,
+        dashArray: '6, 6'
+    }).addTo(map);
+
+    {% if shipment.assigned_vehicle and shipment.assigned_vehicle.latitude %}
+    L.circleMarker([{{ shipment.assigned_vehicle.latitude }}, {{ shipment.assigned_vehicle.longitude }}], {
+        radius: 8,
+        fillColor: '#10b981',
+        color: '#ffffff',
+        weight: 2,
+        fillOpacity: 0.9
+    }).addTo(map).bindPopup("Vehicle Location").openPopup();
+    {% endif %}
+
+    map.fitBounds(line.getBounds(), { padding: [30, 30] });
+</script>
+{% endif %}
+
+</body>
+</html>

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogiCraft - Master Presentation & Technical Reference Guide</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 14mm 14mm 16mm 14mm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 8pt;
+                color: #64748b;
+            }
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #0f172a;
+            background: #ffffff;
+            line-height: 1.5;
+            font-size: 9.5pt;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        .avoid-break {
+            page-break-inside: avoid;
+        }
+        
+        /* Header Banner */
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #2563eb 100%);
+            color: #ffffff;
+            padding: 24px 28px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 22pt;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+        .header .subtitle {
+            font-size: 11pt;
+            color: #93c5fd;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+        .header .meta-bar {
+            display: flex;
+            gap: 20px;
+            font-size: 8.5pt;
+            color: #cbd5e1;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            padding-top: 10px;
+        }
+
+        h2 {
+            font-size: 13.5pt;
+            font-weight: 700;
+            color: #0f172a;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 5px;
+            margin-top: 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        h3 {
+            font-size: 10.5pt;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 12px;
+            margin-bottom: 6px;
+        }
+        p {
+            margin-bottom: 8px;
+            color: #334155;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+            font-size: 8.5pt;
+        }
+        th, td {
+            padding: 7px 10px;
+            text-align: left;
+            border: 1px solid #e2e8f0;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-weight: 700;
+        }
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 7.5pt;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-amber { background: #fef3c7; color: #92400e; }
+        .badge-purple { background: #f3e8ff; color: #6b21a8; }
+        .code-link {
+            font-family: "Consolas", monospace;
+            color: #2563eb;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        /* Callout Box */
+        .callout {
+            background: #eff6ff;
+            border-left: 4px solid #2563eb;
+            padding: 10px 14px;
+            border-radius: 0 6px 6px 0;
+            margin-bottom: 14px;
+            font-size: 9pt;
+        }
+        .callout-title {
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 3px;
+        }
+        .callout-gold {
+            background: #fefce8;
+            border-left: 4px solid #ca8a04;
+        }
+        .callout-gold .callout-title {
+            color: #854d0e;
+        }
+
+        /* Script Steps */
+        .step-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            background: #ffffff;
+        }
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 9.5pt;
+            margin-bottom: 4px;
+        }
+        .dialogue-box {
+            background: #f8fafc;
+            border-left: 3px solid #10b981;
+            padding: 6px 10px;
+            margin-top: 6px;
+            font-style: italic;
+            color: #0f172a;
+            font-size: 8.8pt;
+        }
+
+        /* Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .card {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <h1>LogiCraft Operations Portal</h1>
+        <div class="subtitle">Complete Master Presentation & Technical Reference Guide</div>
+        <div class="meta-bar">
+            <span><strong>Stack:</strong> Python 3.13 • Django 5.x • Leaflet GIS • Bootstrap 5</span>
+            <span><strong>Environment:</strong> Localhost (127.0.0.1:8000)</span>
+            <span><strong>Date:</strong> September 2026</span>
+        </div>
+    </div>
+
+    <!-- 1. Executive Summary & Pitch -->
+    <div class="callout">
+        <div class="callout-title">Project Mission Statement</div>
+        <strong>LogiCraft</strong> is an integrated fleet and logistics management system that combines <strong>real-time GIS telematics tracking</strong>, <strong>freight consignment lifecycle management</strong>, <strong>regional warehouse capacity planning</strong>, and <strong>multi-modal passenger transit ticketing</strong> into a unified, enterprise-ready platform.
+    </div>
+
+    <!-- 2. Master Credentials -->
+    <h2>1. Staff Roles & Login Credentials</h2>
+    <p>The system enforces Role-Based Access Control (RBAC) via a custom user model. All roles can be tested via the login portal at <span class="code-link">http://127.0.0.1:8000/users/login/</span>.</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Role</th>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Role Badge</th>
+                <th>Permissions & Scope</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>System Administrator</strong></td>
+                <td><code>admin</code></td>
+                <td><code>admin123</code></td>
+                <td><span class="badge badge-purple">Admin</span></td>
+                <td>Full system governance, user permissions, master fleet & warehouse registries, Django Admin.</td>
+            </tr>
+            <tr>
+                <td><strong>Logistics Manager</strong></td>
+                <td><code>manager1</code></td>
+                <td><code>manager123</code></td>
+                <td><span class="badge badge-blue">Manager</span></td>
+                <td>Freight dispatch, vehicle fleet allocation, shipment waybill generation, inventory auditing.</td>
+            </tr>
+            <tr>
+                <td><strong>Fleet Driver</strong></td>
+                <td><code>driver_rajesh</code></td>
+                <td><code>driver123</code></td>
+                <td><span class="badge badge-amber">Driver</span></td>
+                <td>Dedicated telemetry console, assigned trip checkpoints, turn-by-turn route overview.</td>
+            </tr>
+            <tr>
+                <td><strong>Public Customer</strong></td>
+                <td><em>(No Login Required)</em></td>
+                <td><em>(None)</em></td>
+                <td><span class="badge badge-green">Public</span></td>
+                <td>Public consignment tracking portal via tracking number (e.g. <code>LC-2026-DELMUM</code>).</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 3. Master URLs Directory -->
+    <h2>2. Complete System URLs Directory</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Feature / Page</th>
+                <th>Direct URL</th>
+                <th>Description & Key Highlights</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Portal Login</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/users/login/">/users/login/</a></td>
+                <td>Role-based authentication gateway with secure session tokens and redirection.</td>
+            </tr>
+            <tr>
+                <td><strong>Executive Dashboard</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/">/</a></td>
+                <td>Live operations cockpit: 4 KPI metric cards, fleet health stats, active transit routes.</td>
+            </tr>
+            <tr>
+                <td><strong>Live GIS Telematics Map</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/fleet/map/">/fleet/map/</a></td>
+                <td><strong>Flagship Feature:</strong> Interactive Leaflet map, Esri World Streets / OSM / Satellite layer switcher, fly-to sidebar.</td>
+            </tr>
+            <tr>
+                <td><strong>Fleet Ledger</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/fleet/">/fleet/</a></td>
+                <td>Complete vehicle registry with status tags (Available, On Trip, Maintenance) and odometers.</td>
+            </tr>
+            <tr>
+                <td><strong>Vehicle Telemetry View</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/fleet/vehicle/1/">/fleet/vehicle/1/</a></td>
+                <td>Tata Signa hauler telemetry: GPS coordinates, payload capacity, maintenance service logs.</td>
+            </tr>
+            <tr>
+                <td><strong>Register Vehicle</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/fleet/vehicle/add/">/fleet/vehicle/add/</a></td>
+                <td>Form to onboard heavy trucks, delivery vans, and transit coaches with payload configs.</td>
+            </tr>
+            <tr>
+                <td><strong>Export Fleet CSV</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/fleet/export-csv/">/fleet/export-csv/</a></td>
+                <td>Instant streaming CSV download of entire vehicle fleet for Excel/PowerBI reporting.</td>
+            </tr>
+            <tr>
+                <td><strong>Freight Shipments</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/shipments/">/shipments/</a></td>
+                <td>Consignment ledger tracking weights, freight costs, origin/destinations, and status pills.</td>
+            </tr>
+            <tr>
+                <td><strong>Create Consignment</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/shipments/new/">/shipments/new/</a></td>
+                <td>Auto-generates unique AWB tracking codes, assigns carriers, drivers, and cargo specs.</td>
+            </tr>
+            <tr>
+                <td><strong>Shipment Detail & Map</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/shipments/1/">/shipments/1/</a></td>
+                <td>Progress timeline milestones (Booked ➔ Picked Up ➔ In Transit) and mini GIS route line.</td>
+            </tr>
+            <tr>
+                <td><strong>Printable Waybill</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/shipments/1/waybill/">/shipments/1/waybill/</a></td>
+                <td>Official consignment waybill formatted for thermal printing and dispatch sign-off.</td>
+            </tr>
+            <tr>
+                <td><strong>Public Parcel Tracker</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/shipments/track/?tracking_number=LC-2026-DELMUM">/shipments/track/</a></td>
+                <td>Customer tracking page: live truck GPS pin, route polyline, and checkpoint history.</td>
+            </tr>
+            <tr>
+                <td><strong>Regional Warehouses</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/warehouse/">/warehouse/</a></td>
+                <td>Storage hubs (Delhi, Navi Mumbai, Bengaluru) with square-footage utilization metrics.</td>
+            </tr>
+            <tr>
+                <td><strong>Warehouse Inventory Detail</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/warehouse/1/">/warehouse/1/</a></td>
+                <td>Delhi Central Hub inventory items (Smart TVs, Apparel), unit weights, and hub manager contact.</td>
+            </tr>
+            <tr>
+                <td><strong>Transit Bus Routes</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/transport/">/transport/</a></td>
+                <td>Intercity schedules (Delhi ➔ Agra, Mumbai ➔ Pune) with departure timings, fares, and coaches.</td>
+            </tr>
+            <tr>
+                <td><strong>Passenger Bookings</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/bookings/">/bookings/</a></td>
+                <td>Passenger manifests, assigned seat numbers (e.g. 12A), travel dates, and fares collected.</td>
+            </tr>
+            <tr>
+                <td><strong>Book Ticket Form</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/bookings/book/1/">/bookings/book/1/</a></td>
+                <td>Real-time seat reservation form decrementing available bus seats automatically.</td>
+            </tr>
+            <tr>
+                <td><strong>Django Administration</strong></td>
+                <td><a class="code-link" href="http://127.0.0.1:8000/admin/">/admin/</a></td>
+                <td>Direct ORM database administration console for system maintainers and DBAs.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="page-break"></div>
+
+    <!-- 3. Technical Architecture -->
+    <h2>3. Technical Architecture & Design Decisions</h2>
+    <div class="grid-2">
+        <div class="card">
+            <h3>Backend & ORM Design</h3>
+            <p>Built with <strong>Python 3.13 & Django 5.x</strong> using clean Model-View-Template separation. Data integrity is enforced using foreign key cascades, unique tracking number generators, and decimal-precision financial calculations.</p>
+        </div>
+        <div class="card">
+            <h3>GIS & Mapping Strategy</h3>
+            <p>Integrated <strong>Leaflet.js</strong> with <strong>Esri World Street Map</strong>, <strong>OpenStreetMap</strong>, and <strong>Esri Satellite Imagery</strong>. Completely eliminates third-party API keys, billing accounts, and avoids OSM volunteer server 403 blocks.</p>
+        </div>
+        <div class="card">
+            <h3>Role-Based Access (RBAC)</h3>
+            <p>Extended <code>AbstractUser</code> with a custom <code>Role</code> enumeration (<code>ADMIN</code>, <code>LOGISTICS_MANAGER</code>, <code>DRIVER</code>). Decorators restrict critical endpoints like vehicle onboarding and CSV exports.</p>
+        </div>
+        <div class="card">
+            <h3>Reporting & Data Export</h3>
+            <p>Native HTTP streaming using Python's <code>csv</code> writer generates RFC-4180 compliant CSV files with live metadata headers, allowing instant data extraction into BI tooling.</p>
+        </div>
+    </div>
+
+    <!-- 4. Step-by-Step Presentation Script -->
+    <h2>4. Step-by-Step Presentation Script (How to Demo)</h2>
+    <p>Follow this curated 6-minute flow to deliver a confident and structured presentation.</p>
+
+    <div class="step-card avoid-break">
+        <div class="step-header">
+            <span>Step 1: Introduction & Role-Based Access Control</span>
+            <span>Duration: 1.0 Min</span>
+        </div>
+        <p><strong>Action:</strong> Open <code>http://127.0.0.1:8000/users/login/</code> and log in as <code>admin</code> / <code>admin123</code>.</p>
+        <div class="dialogue-box">
+            "LogiCraft is an enterprise logistics portal built in Django 5. It enforces strict role-based access control where system admins manage infrastructure, logistics managers coordinate dispatches, and fleet drivers have dedicated mobile-friendly views."
+        </div>
+    </div>
+
+    <div class="step-card avoid-break">
+        <div class="step-header">
+            <span>Step 2: Executive Dashboard KPIs</span>
+            <span>Duration: 1.0 Min</span>
+        </div>
+        <p><strong>Action:</strong> Navigate to the home dashboard (<code>http://127.0.0.1:8000/</code>).</p>
+        <div class="dialogue-box">
+            "The dashboard gives operations directors an immediate bird's-eye view: active vehicles on the road, high-priority cargo consignments, storage footprint across hubs, and active passenger transit routes across the country."
+        </div>
+    </div>
+
+    <div class="step-card avoid-break">
+        <div class="step-header">
+            <span>Step 3: Live GIS Telematics Map (The Showstopper)</span>
+            <span>Duration: 2.0 Min</span>
+        </div>
+        <p><strong>Action:</strong> Navigate to <code>http://127.0.0.1:8000/fleet/map/</code>.</p>
+        <p><strong>Demonstrate:</strong> 1) Click the top-right layer switch to toggle between <em>World Street Map</em> and <em>Satellite Imagery</em>. 2) Click any asset in the right sidebar — the map smoothly flies to and centers on the marker. 3) Point out the blue dashed Delhi-to-Mumbai freight corridor.</p>
+        <div class="dialogue-box">
+            "This is our GIS telematics engine. Rather than relying on costly third-party map APIs with rate limits, we integrated high-performance Esri and OpenStreetMap layers. We plot real-time vehicle GPS coordinates, interstate freight corridors, and warehouse hubs with smooth fly-to animations."
+        </div>
+    </div>
+
+    <div class="step-card avoid-break">
+        <div class="step-header">
+            <span>Step 4: Freight Lifecycle & Public Tracking</span>
+            <span>Duration: 1.5 Min</span>
+        </div>
+        <p><strong>Action:</strong> Open shipment <code>LC-2026-DELMUM</code> at <code>/shipments/1/</code>. Show the milestone timeline and click <strong>Print Waybill</strong>. Then open an Incognito window to <code>/shipments/track/?tracking_number=LC-2026-DELMUM</code>.</p>
+        <div class="dialogue-box">
+            "Every shipment maintains a verifiable audit trail with milestone checkpoints. Consignors can instantly generate standard freight waybills, while end-customers can track their parcels in real time without needing an account."
+        </div>
+    </div>
+
+    <div class="step-card avoid-break">
+        <div class="step-header">
+            <span>Step 5: Multi-Modal Transit & Bus Ticketing</span>
+            <span>Duration: 0.5 Min</span>
+        </div>
+        <p><strong>Action:</strong> Open <code>/transport/</code> and <code>/bookings/</code>. Show the Volvo coach intercity routes and passenger seat allocations.</p>
+        <div class="dialogue-box">
+            "LogiCraft also supports passenger operations. Intercity coaches have scheduled routes, live seat availability tracking, and automated passenger ticket issuance."
+        </div>
+    </div>
+
+    <!-- 5. Q&A Cheat Sheet -->
+    <div class="page-break"></div>
+    <h2>5. Evaluator Q&A Cheat Sheet (Common Viva Questions)</h2>
+    
+    <div class="step-card avoid-break">
+        <strong>Q: How does the map render live locations without paid Google Maps APIs?</strong>
+        <p style="margin-top:4px;"><strong>Answer:</strong> We use Leaflet.js with <strong>Esri World Street Map</strong> and <strong>OpenStreetMap</strong> raster tile servers. Leaflet downloads raster tiles asynchronously over HTTPS with zero billing dependencies, while Django ORM serializes model coordinates to GeoJSON-compatible objects on the client.</p>
+    </div>
+
+    <div class="step-card avoid-break">
+        <strong>Q: How are coordinates and vehicle locations updated?</strong>
+        <p style="margin-top:4px;"><strong>Answer:</strong> The <code>Vehicle</code> model stores float fields for <code>latitude</code> and <code>longitude</code> alongside timestamps and current location descriptions. In production, IoT telematics devices (OBD-II / GPS transponders) send telemetry updates to an internal REST webhook endpoint which updates these coordinates.</p>
+    </div>
+
+    <div class="step-card avoid-break">
+        <strong>Q: How is data protected between different user roles?</strong>
+        <p style="margin-top:4px;"><strong>Answer:</strong> Through Django's built-in session framework coupled with custom view decorators (e.g. <code>@login_required</code> and role verification checks). Views evaluate <code>request.user.role</code> before granting access to sensitive views like fleet modifications or financial waybills.</p>
+    </div>
+
+    <div class="step-card avoid-break">
+        <strong>Q: How does the system scale to handle large datasets?</strong>
+        <p style="margin-top:4px;"><strong>Answer:</strong> We use Django database query optimizations like <code>select_related</code> and <code>prefetch_related</code> to eliminate N+1 query overhead across relationships (e.g. Driver-to-Vehicle, Shipment-to-Warehouse). CSV exports utilize Python generators to stream rows without consuming server RAM.</p>
+    </div>
+
+    <!-- Pro Tip Callout -->
+    <div class="callout callout-gold avoid-break" style="margin-top: 15px;">
+        <div class="callout-title">Golden Presentation Strategy</div>
+        <strong>Before stepping into the presentation:</strong> Open the 4 primary tabs in your browser in advance:
+        <br>1) <strong>Dashboard</strong> (<code>/</code>), 2) <strong>GIS Map</strong> (<code>/fleet/map/</code>), 3) <strong>Shipment Waybill</strong> (<code>/shipments/1/</code>), and 4) <strong>Public Tracking</strong> (<code>/shipments/track/</code>).
+        <br>Seamlessly flipping between these tabs demonstrates high product Polish and zero lag!
+    </div>
+
+</body>
+</html>

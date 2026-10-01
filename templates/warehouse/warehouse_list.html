@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Warehouses & Hubs - LogiCraft{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-0 text-dark">Warehouses & Logistics Hubs</h3>
+        <p class="text-muted mb-0 small">Storage centers, regional sorting hubs, and inventory footprint.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for wh in warehouses %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm h-100 p-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <span class="badge bg-primary-subtle text-primary font-monospace">{{ wh.code }}</span>
+                <span class="badge bg-success-subtle text-success badge-status">{{ wh.get_status_display }}</span>
+            </div>
+            <h5 class="fw-bold text-dark mb-1">{{ wh.name }}</h5>
+            <small class="text-muted mb-3 d-block"><i class="bi bi-geo-alt"></i> {{ wh.city }}, {{ wh.state }}</small>
+
+            <div class="p-3 bg-light rounded-3 mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <small class="text-muted">Storage Area:</small>
+                    <small class="fw-bold">{{ wh.total_capacity_sqft }} sq.ft</small>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <small class="text-muted">Active SKUs:</small>
+                    <small class="fw-bold text-primary">{{ wh.inventory_items.count }} Categories</small>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+                <small class="text-muted">Mgr: {{ wh.manager_name }}</small>
+                <a href="{% url 'warehouse:warehouse_detail' wh.id %}" class="btn btn-sm btn-outline-primary">
+                    Manage Inventory <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center text-muted py-5">No warehouses configured.</div>
+    {% endfor %}
+</div>
+{% endblock %}

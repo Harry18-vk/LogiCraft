@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block title %}Live GIS Telematics Map - LogiCraft{% endblock %}
+
+{% block extra_css %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+    #telematicsMap {
+        height: 650px;
+        width: 100%;
+        border-radius: 12px;
+        z-index: 1;
+    }
+    .custom-div-icon {
+        background: transparent;
+        border: none;
+    }
+    .marker-pin {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 16px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        border: 2px solid #ffffff;
+    }
+    .pin-vehicle { background: #2563eb; }
+    .pin-warehouse { background: #7c3aed; }
+    .pin-bus { background: #f59e0b; }
+    .asset-item {
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .asset-item:hover {
+        background: #f1f5f9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-0 text-dark">Live GIS Fleet Telematics Map</h3>
+        <p class="text-muted mb-0 small">Real-time GPS tracking across logistics corridors, depots, and freight routes.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'fleet:export_csv' %}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export Fleet CSV
+        </a>
+        <a href="{% url 'fleet:fleet_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-list-ul me-1"></i> List View
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Map Container -->
+    <div class="col-lg-9">
+        <div class="card border-0 shadow-sm p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-primary active" id="filterAll">Show All</button>
+                    <button type="button" class="btn btn-outline-primary" id="filterVehicles">Vehicles Only ({{ vehicles_count }})</button>
+                    <button type="button" class="btn btn-outline-primary" id="filterWarehouses">Warehouses ({{ warehouses_count }})</button>
+                </div>
+                <div class="d-flex align-items-center gap-3 small">
+                    <span><span class="badge" style="background:#2563eb;">&bull;</span> Heavy & Medium Trucks</span>
+                    <span><span class="badge" style="background:#f59e0b;">&bull;</span> Transit Buses</span>
+                    <span><span class="badge" style="background:#7c3aed;">&bull;</span> Logistics Hubs</span>
+                </div>
+            </div>
+            <div id="telematicsMap"></div>
+        </div>
+    </div>
+
+    <!-- Active Asset Telemetry Sidebar -->
+    <div class="col-lg-3">
+        <div class="card border-0 shadow-sm p-3 h-100" style="max-height: 720px; overflow-y: auto;">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Tracked Assets</h6>
+            <div class="list-group list-group-flush" id="assetList">
+                <!-- Injected via JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    const vehicles = {{ vehicles_json|safe }};
+    const warehouses = {{ warehouses_json|safe }};
+
+    // Base tile layers (100% Free, NO API keys required, no watermarks, no 403 blocks)
+    const esriStreetLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, TomTom'
+    });
+
+    const osmLayer = L.tileLayer('https://tile.openstreetmap.de/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    });
+
+    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP'
+    });
+
+    const topoLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        attribution: 'Tiles &copy; Esri, HERE, Garmin, Intermap, increment P Corp., GEBCO, USGS, FAO, NPS, NRCAN, GeoBase, IGN, Kadaster NL, Ordnance Survey'
+    });
+
+    // Center map over India and set default layer
+    const map = L.map('telematicsMap', {
+        center: [22.5, 78.5],
+        zoom: 5,
+        layers: [esriStreetLayer]
+    });
+
+    // Base map layer switcher
+    const baseMaps = {
+        "World Street Map": esriStreetLayer,
+        "OpenStreetMap Standard": osmLayer,
+        "Satellite Imagery": satelliteLayer,
+        "Topographic": topoLayer
+    };
+    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+
+    const vehicleMarkers = [];
+    const warehouseMarkers = [];
+
+    // Helper to create HTML icon
+    function createIcon(iconClass, colorClass) {
+        return L.divIcon({
+            className: 'custom-div-icon',
+            html: `<div class="marker-pin ${colorClass}"><i class="bi ${iconClass}"></i></div>`,
+            iconSize: [34, 34],
+            iconAnchor: [17, 17],
+            popupAnchor: [0, -20]
+        });
+    }
+
+    const truckIcon = createIcon('bi-truck', 'pin-vehicle');
+    const busIcon = createIcon('bi-bus-front', 'pin-bus');
+    const whIcon = createIcon('bi-building', 'pin-warehouse');
+
+    const assetListEl = document.getElementById('assetList');
+
+    // 1. Add Warehouses
+    warehouses.forEach(w => {
+        const marker = L.marker([w.lat, w.lng], { icon: whIcon }).addTo(map);
+        marker.bindPopup(`
+            <div style="min-width: 180px;">
+                <h6 class="fw-bold text-dark mb-1">${w.name}</h6>
+                <div class="badge bg-secondary mb-2">${w.code}</div>
+                <div class="small text-muted mb-1"><i class="bi bi-geo-alt"></i> ${w.city}</div>
+                <div class="small text-secondary"><strong>Capacity:</strong> ${w.capacity} sq.ft</div>
+                <div class="mt-2 pt-2 border-top">
+                    <a href="/warehouse/${w.id}/" class="btn btn-sm btn-primary w-100 py-0" style="font-size:0.75rem;">View Hub</a>
+                </div>
+            </div>
+        `);
+        warehouseMarkers.push(marker);
+
+        // Add to sidebar
+        const item = document.createElement('div');
+        item.className = 'list-group-item px-2 py-2 border rounded mb-2 asset-item';
+        item.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="badge" style="background:#7c3aed;">Hub</span>
+                <span class="small font-monospace fw-bold">${w.code}</span>
+            </div>
+            <div class="fw-semibold small mt-1">${w.city}</div>
+            <small class="text-muted d-block">${w.name.substring(0, 24)}...</small>
+        `;
+        item.onclick = () => {
+            map.flyTo([w.lat, w.lng], 13);
+            marker.openPopup();
+        };
+        assetListEl.appendChild(item);
+    });
+
+    // 2. Add Vehicles
+    vehicles.forEach(v => {
+        const icon = (v.type.toLowerCase().includes('bus')) ? busIcon : truckIcon;
+        const marker = L.marker([v.lat, v.lng], { icon: icon }).addTo(map);
+        marker.bindPopup(`
+            <div style="min-width: 200px;">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="badge bg-primary font-monospace">${v.reg_number}</span>
+                    <span class="badge bg-success-subtle text-success">${v.status_display}</span>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">${v.model}</h6>
+                <div class="small text-muted mb-1">${v.type}</div>
+                <div class="small text-secondary"><i class="bi bi-geo-alt-fill text-danger me-1"></i>${v.location}</div>
+                <div class="mt-2 pt-2 border-top">
+                    <a href="/fleet/vehicle/${v.id}/" class="btn btn-sm btn-outline-primary w-100 py-0" style="font-size:0.75rem;">Vehicle Telemetry</a>
+                </div>
+            </div>
+        `);
+        vehicleMarkers.push(marker);
+
+        // Add to sidebar
+        const item = document.createElement('div');
+        item.className = 'list-group-item px-2 py-2 border rounded mb-2 asset-item';
+        item.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="badge ${v.type.toLowerCase().includes('bus') ? 'bg-warning text-dark' : 'bg-primary'}">${v.type.toLowerCase().includes('bus') ? 'Bus' : 'Truck'}</span>
+                <span class="small font-monospace fw-bold">${v.reg_number}</span>
+            </div>
+            <div class="fw-semibold small mt-1">${v.model.substring(0, 22)}</div>
+            <small class="text-muted d-block"><i class="bi bi-geo-alt"></i> ${v.location.substring(0, 24)}</small>
+        `;
+        item.onclick = () => {
+            map.flyTo([v.lat, v.lng], 12);
+            marker.openPopup();
+        };
+        assetListEl.appendChild(item);
+    });
+
+    // 3. Connect Delhi & Mumbai logistics corridor with an interstate Polyline
+    const corridorCoords = [
+        [28.5355, 77.2678], // Delhi
+        [26.9124, 75.7873], // Jaipur
+        [22.7196, 75.8577], // Indore / NH 48 corridor
+        [19.0560, 73.0169]  // Mumbai
+    ];
+    const polyline = L.polyline(corridorCoords, {
+        color: '#2563eb',
+        weight: 3,
+        opacity: 0.7,
+        dashArray: '8, 8'
+    }).addTo(map);
+    polyline.bindTooltip("Major Freight Corridor: Delhi ➔ Mumbai (NH 48)", { sticky: true });
+
+    // Filter controls
+    document.getElementById('filterAll').onclick = function() {
+        vehicleMarkers.forEach(m => map.addLayer(m));
+        warehouseMarkers.forEach(m => map.addLayer(m));
+        setActiveFilter(this);
+    };
+    document.getElementById('filterVehicles').onclick = function() {
+        vehicleMarkers.forEach(m => map.addLayer(m));
+        warehouseMarkers.forEach(m => map.removeLayer(m));
+        setActiveFilter(this);
+    };
+    document.getElementById('filterWarehouses').onclick = function() {
+        vehicleMarkers.forEach(m => map.removeLayer(m));
+        warehouseMarkers.forEach(m => map.addLayer(m));
+        setActiveFilter(this);
+    };
+
+    function setActiveFilter(btn) {
+        document.querySelectorAll('.btn-group .btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ vehicle.reg_number }} - Telematics & Maintenance - LogiCraft{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2">
+            <h3 class="fw-bold mb-0 text-dark font-monospace">{{ vehicle.reg_number }}</h3>
+            <span class="badge bg-primary-subtle text-primary badge-status">{{ vehicle.get_status_display }}</span>
+        </div>
+        <p class="text-muted mb-0 small">{{ vehicle.model_name }} ({{ vehicle.get_vehicle_type_display }})</p>
+    </div>
+    <a href="{% url 'fleet:fleet_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Back to Fleet
+    </a>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Telematics Specs -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-info-circle text-primary me-2"></i>Specifications</h5>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span class="text-muted">Payload Capacity:</span>
+                    <span class="fw-semibold">{{ vehicle.capacity_kg }} kg</span>
+                </li>
+                {% if vehicle.passenger_capacity > 0 %}
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span class="text-muted">Passenger Capacity:</span>
+                    <span class="fw-semibold">{{ vehicle.passenger_capacity }} Seats</span>
+                </li>
+                {% endif %}
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span class="text-muted">Fuel Type:</span>
+                    <span class="fw-semibold">{{ vehicle.get_fuel_type_display }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span class="text-muted">Odometer Reading:</span>
+                    <span class="fw-semibold">{{ vehicle.odometer_km }} km</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span class="text-muted">Current Location:</span>
+                    <span class="fw-semibold">{{ vehicle.current_location|default:"Base Depot" }}</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Maintenance Records -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-wrench text-warning me-2"></i>Maintenance & Service Logs</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light" style="font-size: 0.8rem;">
+                        <tr>
+                            <th>DATE</th>
+                            <th>TYPE</th>
+                            <th>DESCRIPTION</th>
+                            <th>COST</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in maintenance_logs %}
+                        <tr>
+                            <td><small>{{ m.service_date }}</small></td>
+                            <td><span class="badge bg-light text-secondary border">{{ m.get_service_type_display }}</span></td>
+                            <td><small>{{ m.description|truncatewords:8 }}</small></td>
+                            <td>₹{{ m.cost }}</td>
+                            <td><span class="badge bg-success-subtle text-success badge-status">{{ m.get_status_display }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-3">No maintenance logs for this vehicle.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

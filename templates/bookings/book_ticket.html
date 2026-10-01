@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Book Bus Ticket - LogiCraft{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h4 class="fw-bold text-dark mb-1">Book Passenger Seat</h4>
+                    <p class="text-muted small mb-0">{{ schedule.route.route_code }} &bull; {{ schedule.route.source_city }} to {{ schedule.route.destination_city }}</p>
+                </div>
+                <a href="{% url 'transport:route_list' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Cancel
+                </a>
+            </div>
+
+            <!-- Trip Summary -->
+            <div class="p-3 bg-light rounded-3 mb-4 border">
+                <div class="row g-2 text-center">
+                    <div class="col-4">
+                        <small class="text-muted d-block">Departure</small>
+                        <span class="fw-bold">{{ schedule.departure_time|time:"H:i" }}</span>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted d-block">Coach Fare</small>
+                        <span class="fw-bold text-success">₹{{ schedule.fare }}</span>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted d-block">Available Seats</small>
+                        <span class="fw-bold text-primary">{{ schedule.available_seats }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small">Passenger Full Name *</label>
+                        <input type="text" name="passenger_name" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">Mobile Phone Number *</label>
+                        <input type="text" name="passenger_phone" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">Email Address</label>
+                        <input type="email" name="passenger_email" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">Travel Date *</label>
+                        <input type="date" name="travel_date" class="form-control" value="{{ default_date }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">Seat Number Choice *</label>
+                        <input type="text" name="seat_number" class="form-control" placeholder="e.g. 14B or 22W" required>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top text-end">
+                    <button type="submit" class="btn btn-primary px-4">Confirm & Issue Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
