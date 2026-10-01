@@ -43,6 +43,10 @@ def vehicle_create(request):
         fuel_type = request.POST.get('fuel_type')
         current_location = request.POST.get('current_location')
 
+        if Vehicle.objects.filter(reg_number=reg_number).exists():
+            messages.error(request, f"Vehicle with registration '{reg_number}' already exists.")
+            return redirect('fleet:vehicle_create')
+
         Vehicle.objects.create(
             reg_number=reg_number,
             model_name=model_name,
@@ -59,7 +63,89 @@ def vehicle_create(request):
     return render(request, 'fleet/vehicle_form.html', {
         'vehicle_types': Vehicle.VehicleType.choices,
         'fuel_types': Vehicle.FuelType.choices,
+        'action': 'Register',
     })
+
+
+@login_required
+def vehicle_edit(request, pk):
+    vehicle = get_object_or_404(Vehicle, pk=pk)
+    if request.method == 'POST':
+        vehicle.model_name = request.POST.get('model_name')
+        vehicle.vehicle_type = request.POST.get('vehicle_type')
+        vehicle.capacity_kg = request.POST.get('capacity_kg')
+        vehicle.passenger_capacity = request.POST.get('passenger_capacity', 0) or 0
+        vehicle.fuel_type = request.POST.get('fuel_type')
+        vehicle.current_location = request.POST.get('current_location')
+        vehicle.status = request.POST.get('status')
+        vehicle.odometer_km = request.POST.get('odometer_km', 0) or 0
+        vehicle.latitude = request.POST.get('latitude') or 28.6139
+        vehicle.longitude = request.POST.get('longitude') or 77.2090
+        vehicle.save()
+        messages.success(request, f"Vehicle {vehicle.reg_number} updated successfully.")
+        return redirect('fleet:vehicle_detail', pk=vehicle.pk)
+
+    return render(request, 'fleet/vehicle_form.html', {
+        'vehicle': vehicle,
+        'vehicle_types': Vehicle.VehicleType.choices,
+        'fuel_types': Vehicle.FuelType.choices,
+        'status_choices': Vehicle.Status.choices,
+        'action': 'Edit',
+    })
+
+
+@login_required
+def vehicle_delete(request, pk):
+    vehicle = get_object_or_404(Vehicle, pk=pk)
+    if request.method == 'POST':
+        reg = vehicle.reg_number
+        vehicle.delete()
+        messages.success(request, f"Vehicle {reg} removed from fleet.")
+        return redirect('fleet:fleet_list')
+    return render(request, 'fleet/vehicle_confirm_delete.html', {'vehicle': vehicle})
+
+
+@login_required
+def maintenance_create(request, vehicle_pk):
+    vehicle = get_object_or_404(Vehicle, pk=vehicle_pk)
+    if request.method == 'POST':
+        service_type = request.POST.get('service_type')
+        description = request.POST.get('description')
+        service_date = request.POST.get('service_date')
+        cost = request.POST.get('cost', 0.00)
+        odometer_at_service = request.POST.get('odometer_at_service', 0)
+        status = request.POST.get('status', MaintenanceRecord.Status.COMPLETED)
+        notes = request.POST.get('notes', '')
+
+        MaintenanceRecord.objects.create(
+            vehicle=vehicle,
+            service_type=service_type,
+            description=description,
+            service_date=service_date,
+            cost=cost,
+            odometer_at_service=odometer_at_service,
+            status=status,
+            notes=notes,
+        )
+        messages.success(request, f"Maintenance record added for {vehicle.reg_number}.")
+        return redirect('fleet:vehicle_detail', pk=vehicle.pk)
+
+    return render(request, 'fleet/maintenance_form.html', {
+        'vehicle': vehicle,
+        'service_types': MaintenanceRecord.ServiceType.choices,
+        'status_choices': MaintenanceRecord.Status.choices,
+    })
+
+
+@login_required
+def maintenance_delete(request, pk):
+    record = get_object_or_404(MaintenanceRecord, pk=pk)
+    vehicle_pk = record.vehicle.pk
+    if request.method == 'POST':
+        record.delete()
+        messages.success(request, "Maintenance record deleted.")
+        return redirect('fleet:vehicle_detail', pk=vehicle_pk)
+    return render(request, 'fleet/maintenance_confirm_delete.html', {'record': record})
 
 
 @login_required

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Warehouse — LogiCraft{% endblock %}
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'warehouse:warehouse_list' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to Warehouses
+    </a>
+</div>
+<div class="card mx-auto" style="max-width:700px;">
+    <div class="card-header">
+        <i class="bi bi-buildings me-2"></i>{{ action }} Warehouse
+    </div>
+    <div class="card-body p-4">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+                {% if not warehouse %}
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Warehouse Code <span class="text-danger">*</span></label>
+                    <input type="text" name="code" class="form-control text-uppercase" placeholder="e.g. WH-DEL-01" required>
+                </div>
+                {% endif %}
+                <div class="col-md-{% if warehouse %}6{% else %}8{% endif %}">
+                    <label class="form-label fw-semibold">Warehouse Name <span class="text-danger">*</span></label>
+                    <input type="text" name="name" class="form-control" value="{{ warehouse.name|default:'' }}" placeholder="e.g. Delhi Central Hub" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">City <span class="text-danger">*</span></label>
+                    <input type="text" name="city" class="form-control" value="{{ warehouse.city|default:'' }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">State <span class="text-danger">*</span></label>
+                    <input type="text" name="state" class="form-control" value="{{ warehouse.state|default:'' }}" required>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Full Address</label>
+                    <textarea name="address" class="form-control" rows="2">{{ warehouse.address|default:'' }}</textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Total Capacity (sq ft)</label>
+                    <input type="number" name="total_capacity_sqft" step="0.01" class="form-control" value="{{ warehouse.total_capacity_sqft|default:50000 }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Manager Name</label>
+                    <input type="text" name="manager_name" class="form-control" value="{{ warehouse.manager_name|default:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Contact Phone</label>
+                    <input type="text" name="contact_phone" class="form-control" value="{{ warehouse.contact_phone|default:'' }}">
+                </div>
+                {% if warehouse %}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Status</label>
+                    <select name="status" class="form-select">
+                        {% for val, label in status_choices %}
+                        <option value="{{ val }}" {% if warehouse.status == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Latitude</label>
+                    <input type="number" name="latitude" step="0.000001" class="form-control" value="{{ warehouse.latitude|default:'28.613900' }}" placeholder="28.6139">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Longitude</label>
+                    <input type="number" name="longitude" step="0.000001" class="form-control" value="{{ warehouse.longitude|default:'77.209000' }}" placeholder="77.2090">
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>{{ action }} Warehouse
+                </button>
+                <a href="{% url 'warehouse:warehouse_list' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

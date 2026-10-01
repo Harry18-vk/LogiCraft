@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Add Maintenance Record — LogiCraft{% endblock %}
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'fleet:vehicle_detail' vehicle.pk %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to {{ vehicle.reg_number }}
+    </a>
+</div>
+<div class="card mx-auto" style="max-width:640px;">
+    <div class="card-header">
+        <i class="bi bi-tools me-2"></i>Add Maintenance Record — {{ vehicle.reg_number }}
+    </div>
+    <div class="card-body p-4">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Service Type <span class="text-danger">*</span></label>
+                    <select name="service_type" class="form-select" required>
+                        {% for val, label in service_types %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Service Date <span class="text-danger">*</span></label>
+                    <input type="date" name="service_date" class="form-control" required>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="Describe the maintenance work done..." required></textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Cost (INR)</label>
+                    <input type="number" name="cost" step="0.01" class="form-control" value="0.00">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Odometer at Service (km)</label>
+                    <input type="number" name="odometer_at_service" step="0.01" class="form-control" value="{{ vehicle.odometer_km }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Status</label>
+                    <select name="status" class="form-select">
+                        {% for val, label in status_choices %}
+                        <option value="{{ val }}" {% if val == 'COMPLETED' %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Notes</label>
+                    <textarea name="notes" class="form-control" rows="2" placeholder="Additional notes..."></textarea>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>Save Record
+                </button>
+                <a href="{% url 'fleet:vehicle_detail' vehicle.pk %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

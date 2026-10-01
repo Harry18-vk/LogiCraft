@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Delete Vehicle — LogiCraft{% endblock %}
+{% block content %}
+<div class="card mx-auto mt-5" style="max-width:500px;">
+    <div class="card-header bg-danger text-white">
+        <i class="bi bi-exclamation-triangle me-2"></i>Confirm Vehicle Deletion
+    </div>
+    <div class="card-body text-center py-4">
+        <p class="fs-5">Remove <strong>{{ vehicle.reg_number }}</strong> from fleet?</p>
+        <p class="text-muted">{{ vehicle.model_name }} — {{ vehicle.get_vehicle_type_display }}</p>
+        <p class="text-danger small">All maintenance records for this vehicle will also be deleted.</p>
+        <form method="post" class="d-flex justify-content-center gap-3 mt-3">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>Yes, Remove</button>
+            <a href="{% url 'fleet:fleet_list' %}" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

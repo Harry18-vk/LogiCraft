@@ -327,6 +327,11 @@
                             <i class="bi bi-buildings"></i> Warehouses
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'warehouse_create' %}active{% endif %}" href="{% url 'warehouse:warehouse_create' %}">
+                            <i class="bi bi-building-add"></i> Add Warehouse
+                        </a>
+                    </li>
                 </ul>
 
                 <div class="sidebar-section-title">Transit & Ticketing</div>
@@ -341,6 +346,22 @@
                             <i class="bi bi-ticket-perforated"></i> Ticket Bookings
                         </a>
                     </li>
+                </ul>
+
+                <div class="sidebar-section-title">Account & Admin</div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}" href="{% url 'users:profile' %}">
+                            <i class="bi bi-person-circle"></i> My Profile
+                        </a>
+                    </li>
+                    {% if user.is_admin_user %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'user_list' %}active{% endif %}" href="{% url 'users:user_list' %}">
+                            <i class="bi bi-people"></i> User Management
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
 
                 <div class="sidebar-section-title">Public Utilities</div>
