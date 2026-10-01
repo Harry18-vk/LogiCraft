@@ -669,6 +669,10 @@
                 <i class="bi bi-geo-alt-fill text-warning"></i>
                 <span>Track Cargo</span>
             </a>
+            <a href="{% url 'users:register' %}" class="nav-pill-btn">
+                <i class="bi bi-person-plus-fill text-info"></i>
+                <span>Sign Up</span>
+            </a>
             <button type="button" class="nav-pill-btn nav-signin-highlight" onclick="showLoginBox()">
                 <i class="bi bi-person-fill"></i>
                 <span>Sign In</span>
@@ -799,8 +803,22 @@
                                 </button>
                             </form>
 
+                            <!-- Sign Up Link -->
+                            <div class="text-center mt-3 mb-2">
+                                <span class="text-white-50 small">New to LogiCraft? </span>
+                                <a href="{% url 'users:register' %}" class="text-info fw-semibold small text-decoration-none">Create an Account / Sign Up</a>
+                            </div>
+
+                            <!-- Quick Demo Credentials Box -->
+                            <div class="mt-3 p-2 rounded" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); font-size: 0.78rem;">
+                                <div class="text-warning fw-semibold mb-1"><i class="bi bi-key-fill me-1"></i>Demo Accounts:</div>
+                                <div class="text-white-50">👑 Admin: <strong class="text-white">admin</strong> | <strong class="text-white">admin123</strong></div>
+                                <div class="text-white-50 mt-1">📋 Manager: <strong class="text-white">manager1</strong> | <strong class="text-white">manager123</strong></div>
+                                <div class="text-white-50 mt-1">🚛 Driver: <strong class="text-white">driver_rajesh</strong> | <strong class="text-white">driver123</strong></div>
+                            </div>
+
                             <!-- Security Footnote -->
-                            <div class="security-footnote">
+                            <div class="security-footnote mt-3">
                                 <i class="bi bi-shield-check text-primary me-2"></i>
                                 <span>Encrypted session with role-based access control.</span>
                             </div>

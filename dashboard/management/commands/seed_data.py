@@ -315,21 +315,27 @@ class Command(BaseCommand):
         )
 
         # Milestones for s1
-        ShipmentStatusHistory.objects.get_or_create(
-            shipment=s1,
-            status=Shipment.Status.BOOKED,
-            defaults={"location_checkpoint": "Delhi North Central Hub", "notes": "Shipment booked and verified"}
-        )
-        ShipmentStatusHistory.objects.get_or_create(
-            shipment=s1,
-            status=Shipment.Status.PICKED_UP,
-            defaults={"location_checkpoint": "Noida Factory Gate 4", "notes": "Cargo loaded onto Tata Signa 4825"}
-        )
-        ShipmentStatusHistory.objects.get_or_create(
-            shipment=s1,
-            status=Shipment.Status.IN_TRANSIT,
-            defaults={"location_checkpoint": "Jaipur Bypass Highway Toll", "notes": "Vehicle cleared toll checkpoint on schedule"}
-        )
+        if not ShipmentStatusHistory.objects.filter(shipment=s1, status=Shipment.Status.BOOKED).exists():
+            ShipmentStatusHistory.objects.create(
+                shipment=s1,
+                status=Shipment.Status.BOOKED,
+                location_checkpoint="Delhi North Central Hub",
+                notes="Shipment booked and verified"
+            )
+        if not ShipmentStatusHistory.objects.filter(shipment=s1, status=Shipment.Status.PICKED_UP).exists():
+            ShipmentStatusHistory.objects.create(
+                shipment=s1,
+                status=Shipment.Status.PICKED_UP,
+                location_checkpoint="Noida Factory Gate 4",
+                notes="Cargo loaded onto Tata Signa 4825"
+            )
+        if not ShipmentStatusHistory.objects.filter(shipment=s1, status=Shipment.Status.IN_TRANSIT).exists():
+            ShipmentStatusHistory.objects.create(
+                shipment=s1,
+                status=Shipment.Status.IN_TRANSIT,
+                location_checkpoint="Jaipur Bypass Highway Toll",
+                notes="Vehicle cleared toll checkpoint on schedule"
+            )
 
         # 9. Bookings
         Booking.objects.get_or_create(
